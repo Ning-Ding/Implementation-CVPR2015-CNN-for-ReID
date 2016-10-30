@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 np.random.seed(1217)
-
+import h5py
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatten,merge
@@ -294,5 +294,15 @@ class NumpyArrayIterator_for_multiinput_from_hdf5(pre_image.Iterator):
         return [batch_x1,batch_x2], batch_y
 
 
-
+if __name__ == '__main__':
+    model = model_def()
+    print 'model definition done.'
+    model = compiler_def(model)
+    print 'model compile done.'
+    f = h5py.File('~/dataset/cuhk-03_for_CNN.h5','r')
+    val_data = [[f['validation']['x1'][:],f['validation']['x2'][:]],f['validation']['y'][:]]
+    print 'validation data loaded.'
+    f_iter = NumpyArrayIterator_for_multiinput_from_hdf5(f,batch_size=100)
+    print 'begin to fit!'
+    model.fit_generator(f_iter,f['train']['y'].shape[0],10,validation_data=val_data)
 
