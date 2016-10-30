@@ -287,8 +287,6 @@ class NumpyArrayIterator_for_multiinput_from_hdf5(pre_image.Iterator):
                 batch_x1[i] = x1
                 batch_x2[i] = x2
        
-        if self.y is None:
-            return [batch_x1, batch_x2]
         y = self.f[self.train_or_validation]['y'][:]
         batch_y = y[index_array]
         return [batch_x1,batch_x2], batch_y
@@ -299,7 +297,7 @@ if __name__ == '__main__':
     print 'model definition done.'
     model = compiler_def(model)
     print 'model compile done.'
-    f = h5py.File('~/dataset/cuhk-03_for_CNN.h5','r')
+    f = h5py.File('cuhk-03_for_CNN.h5','r')
     val_data = [[f['validation']['x1'][:],f['validation']['x2'][:]],f['validation']['y'][:]]
     print 'validation data loaded.'
     f_iter = NumpyArrayIterator_for_multiinput_from_hdf5(f,batch_size=100)
