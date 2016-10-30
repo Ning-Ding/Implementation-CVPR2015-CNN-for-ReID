@@ -20,6 +20,7 @@ from keras.models import Model
 from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatten,merge
 from keras.regularizers import l2
 from keras.optimizers import SGD,RMSprop,Adagrad,Adadelta,Adam,Adamax,Nadam
+from keras.preprocessing import image as pre_image
 
 def model_def(flag=0, weight_decay=0.0005):
     '''
@@ -257,3 +258,53 @@ def compiler_def(model, *args, **kw):
               loss=param['loss'],
               metrics=[param['metrics']])
     return model
+
+
+
+class NumpyArrayIterator_for_multiinput_from_hdf5(pre_image.Iterator):
+
+    def __init__(self, f, train_or_validation = 'train', image_data_generator=None,
+                 batch_size=32, shuffle=False, seed=None,
+                 dim_ordering='default'):
+        
+        if dim_ordering == 'default':
+            dim_ordering = K.image_dim_ordering()
+        self.f = f
+        self.train_or_validation = train_or_validation
+        self.image_data_generator = image_data_generator
+        self.dim_ordering = dim_ordering
+        super(NumpyArrayIterator_for_multiinput_from_hdf5, self).__init__(f[train_or_validation]['y'].shape[0], batch_size, shuffle, seed)
+
+    def next(self):
+        # for python 2.x.
+        # Keeps under lock only the mechanism which advances
+        # the indexing of each batch
+        # see http://anandology.com/blog/using-iterators-and-generators/
+        with self.lock:
+            index_array, current_index, current_batch_size = next(self.index_generator)
+        # The transformation of images is not under thread lock so it can be done in parallel
+        batch_x1 = np.zeros(tuple([current_batch_size] + list(self.f[self.train_or_validation]['x1'].shape[1:])))
+        batch_x2 = np.zeros(tuple([current_batch_size] + list(self.f[self.train_or_validation]['x2'].shape[1:])))
+        for i, j in enumerate(index_array):
+            x1 = self.f[self.train_or_validation]['x1'][j]
+            x2 = self.f[self.train_or_validation]['x2'][j]
+            if self.image_data_generator is None:
+                batch_x1[i] = x1
+                batch_x2[i] = x2
+                continue
+            else:
+                x1 = self.image_data_generator.random_transform(x1.astype('float32'))
+                x2 = self.image_data_generator.random_transform(x2.astype('float32'))
+                x1 = self.image_data_generator.standardize(x1)
+                x2 = self.image_data_generator.standardize(x2)
+                batch_x1[i] = x1
+                batch_x2[i] = x2
+       
+        if self.y is None:
+            return [batch_x1, batch_x2]
+        batch_y = self.y[index_array]
+        return [batch_x1,batch_x2], batch_y
+
+
+
+
