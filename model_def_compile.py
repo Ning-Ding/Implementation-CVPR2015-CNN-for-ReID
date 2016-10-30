@@ -1,17 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Oct 30 22:50:47 2016
-
-@author: lenovo
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Oct 30 17:24:18 2016
-
-@author: CASIA
-"""
-
 import numpy as np
 np.random.seed(1217)
 
