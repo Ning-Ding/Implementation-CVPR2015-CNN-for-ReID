@@ -7,13 +7,13 @@ Created on Sat Oct 29 23:14:44 2016
 import numpy as np
 
 def cmc_curve(camera1, camera2, model, rank_max=50):
-    num = len(camera1)    
+    num = camera1.shape[0]    
     similarity_order = np.zeros((num))
     rank = []
     score = []    
-    for i, person1 in enumerate(camera1):
-        for j, person2 in enumerate(camera2):
-            s = model.predict([person1.reshape(1,160,60,3), person2.reshape(1,160,60,3)])
+    for i in range(num):
+        for j in range(num):
+            s = model.predict([camera1[i][:][:][:].reshape(1,160,60,3), camera2[i][:][:][:].reshape(1,160,60,3)])
             similarity_rate = s[0][0]
             similarity_order[j] = similarity_rate
         similarity_rate_sorted = np.argsort(similarity_order)
