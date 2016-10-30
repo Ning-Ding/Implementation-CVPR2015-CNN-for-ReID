@@ -289,7 +289,8 @@ class NumpyArrayIterator_for_multiinput_from_hdf5(pre_image.Iterator):
        
         if self.y is None:
             return [batch_x1, batch_x2]
-        batch_y = self.y[index_array]
+        y = self.f[self.train_or_validation]['y'][:]
+        batch_y = y[index_array]
         return [batch_x1,batch_x2], batch_y
 
 
