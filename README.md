@@ -38,3 +38,7 @@ This architechture is implemented based on `Keras` with `Tensorflow` backen usin
 >>'test'
 >>>'a'
 >>>'b'
+
+## The model structure
+
+![](https://github.com/Deep-Learning-Person-Re-Identification/Implementaion-1/blob/master/model.png)
