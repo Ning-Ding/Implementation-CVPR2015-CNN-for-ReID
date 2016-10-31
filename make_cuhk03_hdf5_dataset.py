@@ -8,6 +8,7 @@ Created on Sat Oct 29 23:58:37 2016
 import h5py
 import numpy as np
 from PIL import Image
+from keras.preprocessing import image
 '''
 np.array(f[f[f['labeled'][0][i]][j][k]]).transpose(2,1,0)
 this expression will get a numpy array of a picture with axis order is 'tf'
