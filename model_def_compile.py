@@ -298,9 +298,10 @@ if __name__ == '__main__':
     model = compiler_def(model)
     print 'model compile done.'
     f = h5py.File('cuhk-03_for_CNN.h5','r')
-    val_data = [[f['validation']['x1'][:],f['validation']['x2'][:]],f['validation']['y'][:]]
+    #val_data = [[f['validation']['x1'][:],f['validation']['x2'][:]],f['validation']['y'][:]]
     print 'validation data loaded.'
-    f_iter = NumpyArrayIterator_for_multiinput_from_hdf5(f,batch_size=100)
+    f_iter = NumpyArrayIterator_for_multiinput_from_hdf5(f,batch_size=150)
+    f_iter_val = NumpyArrayIterator_for_multiinput_from_hdf5(f,train_or_validation='validation',batch_size=1000)
     print 'begin to fit!'
-    model.fit_generator(f_iter,f['train']['y'].shape[0],10,validation_data=val_data)
+    model.fit_generator(f_iter,150000,10,validation_data=f_iter_val)
 
