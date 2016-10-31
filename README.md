@@ -29,10 +29,12 @@ This architechture is implemented based on `Keras` with `Tensorflow` backen usin
 >>>'x1'
 >>>'x2'
 >>>'y'
+
 >>'validation'
 >>>'x1'
 >>>'x2'
 >>>'y'
+
 >>'test'
 >>>'a'
 >>>'b'
