@@ -303,5 +303,5 @@ if __name__ == '__main__':
     f_iter = NumpyArrayIterator_for_multiinput_from_hdf5(f,batch_size=150)
     f_iter_val = NumpyArrayIterator_for_multiinput_from_hdf5(f,train_or_validation='validation',batch_size=1000)
     print 'begin to fit!'
-    model.fit_generator(f_iter,150000,50,validation_data=f_iter_val,nb_val_samples=6000)
+    model.fit_generator(f_iter,6000,1000,validation_data=f_iter_val,nb_val_samples=6000)
 
