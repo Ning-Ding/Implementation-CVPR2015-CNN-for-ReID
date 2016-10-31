@@ -177,9 +177,9 @@ def _make_validation_set(fread,fvalid):
                                         x2_set = fvalid.create_dataset('x2',shape=(count_val_pos * 3,160,60,3))
                                         y_set = fvalid.create_dataset('y',shape=(count_val_pos * 3,2))
                                         for i in xrange(count_val_pos * 3):
-                                            x1_set[val_data_shuffle_index[i]] = np.array(x1_val_list[i])
-                                            x2_set[val_data_shuffle_index[i]] = np.array(x2_val_list[i])
-                                            y_set[val_data_shuffle_index[i]] = np.array(y_val_list[i])
+                                            x1_set[val_data_shuffle_index[i]] = x1_val_list[i]
+                                            x2_set[val_data_shuffle_index[i]] = x2_val_list[i]
+                                            y_set[val_data_shuffle_index[i]] = y_val_list[i]
                                             print 'already stored',i,'validation image pairs.'
                                         print 'validation data already stored into local disk.'
                                         return 
