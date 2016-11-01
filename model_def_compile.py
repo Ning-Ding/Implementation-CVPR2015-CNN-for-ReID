@@ -295,7 +295,7 @@ class NumpyArrayIterator_for_multiinput_from_hdf5(pre_image.Iterator):
 
 
 if __name__ == '__main__':
-    model = model_def()
+    model = model_def(weight_decay=0.005)
     print 'model definition done.'
     model = compiler_def(model)
     print 'model compile done.'
