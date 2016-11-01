@@ -295,14 +295,14 @@ class NumpyArrayIterator_for_multiinput_from_hdf5(pre_image.Iterator):
 
 
 if __name__ == '__main__':
-    model = model_def(flag=1, weight_decay=0.005)
+    model = model_def()
     print 'model definition done.'
     model = compiler_def(model)
     print 'model compile done.'
     f = h5py.File('cuhk-03_for_CNN.h5','r')
     #val_data = [[f['validation']['x1'][:],f['validation']['x2'][:]],f['validation']['y'][:]]
-    print 'validation data loaded.'
+    #print 'validation data loaded.'
     f_iter = NumpyArrayIterator_for_multiinput_from_hdf5(f,batch_size=150)
-    f_iter_val = NumpyArrayIterator_for_multiinput_from_hdf5(f,train_or_validation='validation',batch_size=1000)
+    f_iter_val = NumpyArrayIterator_for_multiinput_from_hdf5(f,train_or_validation='validation',batch_size=150)
     print 'begin to fit!'
     model.fit_generator(f_iter,6000,1000,validation_data=f_iter_val,nb_val_samples=6000)
