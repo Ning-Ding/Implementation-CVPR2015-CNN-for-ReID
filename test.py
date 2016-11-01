@@ -112,8 +112,8 @@ def model_def(flag=0, weight_decay=0.0005):
         b11 = MaxPooling2D((2,2),dim_ordering='tf')(b10)
         c1 = merge([a11, b11], mode='concat', concat_axis=-1)
         c2 = Flatten()(c1)
-        #c3 = Dense(500,activation='relu', W_regularizer=l2(l=weight_decay))(c2)
-        c4 = Dense(2,activation='softmax', W_regularizer=l2(l=weight_decay))(c2)
+        c3 = Dense(500,activation='relu', W_regularizer=l2(l=weight_decay))(c2)
+        c4 = Dense(2,activation='softmax', W_regularizer=l2(l=weight_decay))(c3)
         
         model = Model(input=[a1,b1],output=c4)
         model.summary()
