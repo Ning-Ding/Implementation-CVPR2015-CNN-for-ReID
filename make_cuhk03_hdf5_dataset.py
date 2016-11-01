@@ -24,11 +24,35 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
     with h5py.File(file_path) as fread, h5py.File('cuhk-03_for_CNN.h5') as fwrite:
         ftrain = fwrite.create_group('train')
         fvalid = fwrite.create_group('validation')
-        ftests = fwrite.create_group('test')
-        _make_validation_set(fread,fvalid)
-        _make_test_set(fread,ftests)
+        ftests = fwrite.create_group('test')       
         val_index = (fread[fread['testsets'][0][0]][:].T - 1).tolist()
         tes_index = (fread[fread['testsets'][0][1]][:].T - 1).tolist()
+        
+        
+        negative_index_list = []
+        count_index = 0
+        for ia in xrange(3):
+            for ka in xrange(fread[fread['labeled'][0][ia]][0].size):        
+                if [ia,ka] in val_index or [ia,ka] in tes_index:
+                    continue
+                else:
+                    for ib in xrange(3):                        
+                        for kb in xrange(fread[fread['labeled'][0][ib]][0].size):
+                            if (ka == kb and ia == ib) or [ib,kb] in val_index or [ib,kb] in tes_index:
+                                continue
+                            else:
+                                for ja in xrange(5):
+                                    if len(fread[fread[fread['labeled'][0][ia]][ja][ka]].shape) == 3:
+                                        for jb in xrange(5,10):
+                                            if len(fread[fread[fread['labeled'][0][ib]][jb][kb]].shape) == 3:
+                                                negative_index_list.append([[ia,ja,ka],[ib,jb,kb]])
+                                                count_index += 1
+                                                print ia,ja,ka,ib,jb,kb,'count:',count_index                                                
+                                                break
+                                        break
+        print 'already found',len(negative_index_list),'negative pairs.'
+        permutation_index = np.random.permutation(len(negative_index_list))  
+        
         x1_array_list = []
         x2_array_list = []
         count = 0
@@ -52,6 +76,7 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
                                     x2_array_list.append(_resize_image(b))
                                     count += 1
                                     print 'already load',count,'positive pairs'
+                                    
         print 'already loaded all positive data.'
         print 'positive data number:',count
         pos_num = count * 5
@@ -82,38 +107,22 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
             y_set[all_data_shuffle_index[i]] = np.array([0,1])
             print 'already stored',i,'images in y.'
         print 'positive data already stored into local disk.'
-        
+                
         count = 0
         index_begin = pos_num
-        while True:
-            for i in xrange(3):
-                for ka in xrange(fread[fread['labeled'][0][i]][0].size):
-                    if [i,ka] in val_index or [i,ka] in tes_index:
-                        continue
-                    else:
-                        for kb in xrange(fread[fread['labeled'][0][i]][0].size):
-                            if ka == kb or [i,kb] in val_index or [i,kb] in tes_index:
-                                continue
-                            else:
-                                for ja in xrange(5):
-                                    a = fread[fread[fread['labeled'][0][i]][ja][ka]][:]
-                                    if a.size < 3:
-                                        continue
-                                    else:
-                                        for jb in xrange(5,10):
-                                            b = fread[fread[fread['labeled'][0][i]][jb][kb]][:]
-                                            if b.size < 3:
-                                                continue
-                                            else:
-                                                x1_set[all_data_shuffle_index[index_begin + count]] = _resize_image(a)
-                                                x2_set[all_data_shuffle_index[index_begin + count]] = _resize_image(b)
-                                                y_set[all_data_shuffle_index[index_begin + count]] = np.array([1,0])
-                                                count += 1
-                                                print 'already stored',count,'negative pairs'
-                                                if count == pos_num * 2:
-                                                    print 'Congratulations!!! All data already stored in local disk.'
-                                                    return
-                                            
+        for n in xrange(pos_num * 2):
+            indexs = negative_index_list[permutation_index[n]]
+            x1_set[all_data_shuffle_index[index_begin + count]] = _resize_image(fread[fread[fread['labeled'][0][indexs[0][0]]][indexs[0][1]][indexs[0][2]]][:])
+            x2_set[all_data_shuffle_index[index_begin + count]] = _resize_image(fread[fread[fread['labeled'][0][indexs[1][0]]][indexs[1][1]][indexs[1][2]]][:])
+            y_set[all_data_shuffle_index[index_begin + count]] = np.array([1,0])
+            count += 1
+            print 'already stored',count,'negative pairs'
+            
+        _make_validation_set(fread,fvalid)
+        _make_test_set(fread,ftests)
+        print 'Congratulations!!! All data already stored in local disk.'
+        
+        
 
 def _resize_image(im_array,shape=(60,160)):
     if im_array.shape[2] > 3:
@@ -133,56 +142,58 @@ def _make_validation_set(fread,fvalid):
     print 'Positive Validation data making......'
     for i,k in val_index:
         for ja in xrange(5):
-            a = fread[fread[fread['labeled'][0][i]][ja][k]][:]
-            if a.size < 3:
+            if len(fread[fread[fread['labeled'][0][i]][ja][k]].shape) < 3:
                 continue
             else:
                 for jb in xrange(5,10):
-                    b = fread[fread[fread['labeled'][0][i]][jb][k]][:]
-                    if b.size < 3:
+                    if len(fread[fread[fread['labeled'][0][i]][jb][k]].shape) < 3:
                         continue
                     else:
-                        x1_val_list.append(_resize_image(a))
-                        x2_val_list.append(_resize_image(b))
+                        x1_val_list.append(_resize_image(fread[fread[fread['labeled'][0][i]][ja][k]][:]))
+                        x2_val_list.append(_resize_image(fread[fread[fread['labeled'][0][i]][jb][k]][:]))
                         y_val_list.append([0,1])
                         count_val_pos += 1
                         print 'already load',count_val_pos,'validation positive pairs'
     
     print 'positive validation pairs loaded,totally:',count_val_pos,'pairs, Begin to load negative validation pairs.'
     count_val_neg = 0
-    while True:
-        for ia,ka in val_index:
-            for ib,kb in val_index:
-                if ia==ib and ka==kb:
-                    continue
-                else:
-                    for ja in xrange(5):
-                        a = fread[fread[fread['labeled'][0][ia]][ja][ka]][:]
-                        if a.size < 3:
-                            continue
-                        else:
-                            for jb in xrange(5,10):
-                                b = fread[fread[fread['labeled'][0][ib]][jb][kb]][:]
-                                if b.size < 3:
-                                    continue
-                                else:
-                                    x1_val_list.append(_resize_image(a))
-                                    x2_val_list.append(_resize_image(b))
-                                    y_val_list.append([1,0])
-                                    count_val_neg += 1
-                                    print 'already load',count_val_neg,'validation negative pairs'
-                                    if count_val_neg == count_val_pos * 2:
-                                        val_data_shuffle_index = np.random.permutation(count_val_pos * 3)
-                                        x1_set = fvalid.create_dataset('x1',shape=(count_val_pos * 3,160,60,3)) 
-                                        x2_set = fvalid.create_dataset('x2',shape=(count_val_pos * 3,160,60,3))
-                                        y_set = fvalid.create_dataset('y',shape=(count_val_pos * 3,2))
-                                        for i in xrange(count_val_pos * 3):
-                                            x1_set[val_data_shuffle_index[i]] = x1_val_list[i]
-                                            x2_set[val_data_shuffle_index[i]] = x2_val_list[i]
-                                            y_set[val_data_shuffle_index[i]] = y_val_list[i]
-                                            print 'already stored',i,'validation image pairs.'
-                                        print 'validation data already stored into local disk.'
-                                        return 
+        
+    negative_index_list = []
+    for ia,ka in val_index:
+        for ib,kb in val_index:
+            if ia == ib and ka == kb:
+                continue
+            else:
+                for ja in xrange(5):
+                    if len(fread[fread[fread['labeled'][0][ia]][ja][ka]].shape) == 3:
+                        for jb in xrange(5,10):
+                            if len(fread[fread[fread['labeled'][0][ib]][jb][kb]].shape) == 3:
+                                negative_index_list.append([[ia,ja,ka],[ib,jb,kb]])
+                                break
+                        break
+                        
+    print 'already found',len(negative_index_list),'negative pairs for validation set.'
+    permutation_index = np.random.permutation(len(negative_index_list)) 
+    
+    for n in xrange(count_val_pos * 2):
+        indexs = negative_index_list[permutation_index[n]]
+        x1_val_list.append(_resize_image(fread[fread[fread['labeled'][0][indexs[0][0]]][indexs[0][1]][indexs[0][2]]][:]))
+        x2_val_list.append(_resize_image(fread[fread[fread['labeled'][0][indexs[1][0]]][indexs[1][1]][indexs[1][2]]][:]))
+        y_val_list.append([1,0])
+        count_val_neg += 1
+        print 'already load',count_val_neg,'validation negative pairs'
+    
+    val_data_shuffle_index = np.random.permutation(count_val_pos * 3)
+    x1_set = fvalid.create_dataset('x1',shape=(count_val_pos * 3,160,60,3)) 
+    x2_set = fvalid.create_dataset('x2',shape=(count_val_pos * 3,160,60,3))
+    y_set = fvalid.create_dataset('y',shape=(count_val_pos * 3,2))
+    for i in xrange(count_val_pos * 3):
+        x1_set[val_data_shuffle_index[i]] = x1_val_list[i]
+        x2_set[val_data_shuffle_index[i]] = x2_val_list[i]
+        y_set[val_data_shuffle_index[i]] = y_val_list[i]
+        print 'already stored',i,'validation image pairs.'
+    print 'validation data already stored into local disk.'
+    return 
                                         
 
 def _make_test_set(fread,ftests):
