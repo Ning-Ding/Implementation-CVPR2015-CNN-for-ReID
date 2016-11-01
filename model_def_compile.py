@@ -2,6 +2,8 @@
 import numpy as np
 np.random.seed(1217)
 import h5py
+import tensorflow as tf
+tf.python.control_flow_ops = tf
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatten,merge
