@@ -46,6 +46,7 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
                                         for jb in xrange(5,10):
                                             if len(fread[fread[fread['labeled'][0][ib]][jb][kb]].shape) == 3:
                                                 negative_index_list.append([[ia,ja,ka],[ib,jb,kb]])
+                                                count_index += 1
                                                 print ia,ja,ka,ib,jb,kb,'count:',count_index                                                
                                                 break
                                         break
