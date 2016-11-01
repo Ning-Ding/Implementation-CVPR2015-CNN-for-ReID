@@ -7,8 +7,8 @@ Created on Sat Oct 29 23:58:37 2016
 
 import h5py
 import numpy as np
+from PIL import Image
 from keras.preprocessing import image
-
 '''
 np.array(f[f[f['labeled'][0][i]][j][k]]).transpose(2,1,0)
 this expression will get a numpy array of a picture with axis order is 'tf'
@@ -115,13 +115,13 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
                                                     return
                                             
 
-def _resize_image(im_array,shape=(160,60)):
+def _resize_image(im_array,shape=(60,160)):
     if im_array.shape[2] > 3:
         im_array = im_array.transpose(2,1,0)
-    im = image.array_to_img(im_array,dim_ordering = 'tf')
+    im = Image.fromarray(im_array)
     im = im.resize(shape)
-    array = image.img_to_array(im,dim_ordering = 'tf')
-    return array.transpose(1,0,2) / 255
+    array = np.array(im)
+    return array/ 255.
 
 def _make_validation_set(fread,fvalid):
     print 'Begin to make validation data set hdf5 file......' 
@@ -177,9 +177,9 @@ def _make_validation_set(fread,fvalid):
                                         x2_set = fvalid.create_dataset('x2',shape=(count_val_pos * 3,160,60,3))
                                         y_set = fvalid.create_dataset('y',shape=(count_val_pos * 3,2))
                                         for i in xrange(count_val_pos * 3):
-                                            x1_set[val_data_shuffle_index[i]] = np.array(x1_val_list[i])
-                                            x2_set[val_data_shuffle_index[i]] = np.array(x2_val_list[i])
-                                            y_set[val_data_shuffle_index[i]] = np.array(y_val_list[i])
+                                            x1_set[val_data_shuffle_index[i]] = x1_val_list[i]
+                                            x2_set[val_data_shuffle_index[i]] = x2_val_list[i]
+                                            y_set[val_data_shuffle_index[i]] = y_val_list[i]
                                             print 'already stored',i,'validation image pairs.'
                                         print 'validation data already stored into local disk.'
                                         return 
