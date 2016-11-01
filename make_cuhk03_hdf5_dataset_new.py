@@ -24,14 +24,13 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
     with h5py.File(file_path) as fread, h5py.File('cuhk-03_for_CNN.h5') as fwrite:
         ftrain = fwrite.create_group('train')
         fvalid = fwrite.create_group('validation')
-        ftests = fwrite.create_group('test')
-        _make_validation_set(fread,fvalid)
-        _make_test_set(fread,ftests)
+        ftests = fwrite.create_group('test')       
         val_index = (fread[fread['testsets'][0][0]][:].T - 1).tolist()
         tes_index = (fread[fread['testsets'][0][1]][:].T - 1).tolist()
         
         
         negative_index_list = []
+        count_index = 0
         for ia in xrange(3):
             for ka in xrange(fread[fread['labeled'][0][ia]][0].size):        
                 if [ia,ka] in val_index or [ia,ka] in tes_index:
@@ -47,6 +46,7 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
                                         for jb in xrange(5,10):
                                             if len(fread[fread[fread['labeled'][0][ib]][jb][kb]].shape) == 3:
                                                 negative_index_list.append([[ia,ja,ka],[ib,jb,kb]])
+                                                print ia,ja,ka,ib,jb,kb,'count:',count_index                                                
                                                 break
                                         break
         print 'already found',len(negative_index_list),'negative pairs.'
@@ -116,9 +116,11 @@ def create_hdf5_dataset_for_cuhk03(file_path = './cuhk-03.mat'):
             y_set[all_data_shuffle_index[index_begin + count]] = np.array([1,0])
             count += 1
             print 'already stored',count,'negative pairs'
-            if count == pos_num * 2:
-                print 'Congratulations!!! All data already stored in local disk.'
-                return
+            
+        _make_validation_set(fread,fvalid)
+        _make_test_set(fread,ftests)
+        print 'Congratulations!!! All data already stored in local disk.'
+        
         
 
 def _resize_image(im_array,shape=(60,160)):
