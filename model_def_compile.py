@@ -152,10 +152,10 @@ def model_def(flag=0, weight_decay=0.0005):
 
 def compiler_def(model, *args, **kw):
     '''
-    compile the model after definited
+    compile the model after defined
     ---------------------------------------------------------------------------
     INPUT:
-        model: model before compiling
+        model: model before compiled
         all the other inputs should be organized as the form 
                 loss='categorical_crossentropy'
         # Example
@@ -168,7 +168,7 @@ def compiler_def(model, *args, **kw):
                 config is the example showed above (SGD_new is the identical 
                 optimizer to the one in reference paper)
     OUTPUT:
-        model: model after being compiled
+        model: model after compiled
         
         # References
         - [An Improved Deep Learning Architecture for Person Re-Identification]
