@@ -56,9 +56,9 @@ def get_image_path_list(train_or_test = 'train'):
     ---------------------------------------------------------------------------
     '''
     if train_or_test == 'train':
-        folder_path = '~/dataset/market1501/boundingboxtrain'
+        folder_path = '/home/ubuntu/dataset/market1501/boundingboxtrain'
     else:
-        folder_path = '~/dataset/market1501/boundingboxtest'
+        folder_path = '/home.ubuntu/dataset/market1501/boundingboxtest'
     assert os.path.isdir(folder_path)
     print 'already get all the image path.'
     return os.listdir(folder_path)
