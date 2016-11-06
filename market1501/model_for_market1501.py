@@ -326,6 +326,7 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
 
 if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
+    user_name = raw_input('please input your system user name:')
     Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
     model = model_def()
     print 'model definition done.'
@@ -334,9 +335,9 @@ if __name__ == '__main__':
     f=h5py.File('market1501_positive_index.h5','r')
     print 'begin to fit!'
     model.fit_generator(
-                        Data_Generator.flow(f,get_image_path_list()),
+                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name)),
                         30000,
                         50,
-                        validation_data=Data_Generator.flow(f,get_image_path_list('test'),train_or_validation='test'),
+                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),train_or_validation='test'),
                         nb_val_samples=6000
                         )
