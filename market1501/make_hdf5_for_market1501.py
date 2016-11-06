@@ -16,7 +16,7 @@ def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu')
     while i < len(path_list):
         j = i + 1
         while j < len(path_list) and path_list[j][6] == path_list[i][6]:
-            j = i + 1
+            j += 1
         i = j - 1
         while j < len(path_list) and path_list[j][0:4] == path_list[i][0:4]:
             if path_list[j][6] != path_list[i][6]:
