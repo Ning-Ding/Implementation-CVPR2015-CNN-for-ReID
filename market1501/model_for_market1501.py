@@ -7,6 +7,7 @@ Created on Sun Nov 06 18:08:01 2016
 
 import numpy as np
 np.random.seed(1217)
+import os
 import h5py
 import tensorflow as tf
 tf.python.control_flow_ops = tf
@@ -305,7 +306,7 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
     def flow(self, f, path_list, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
         
         return NumpyArrayIterator_for_Market1501(
-            f, path_list, train_or_validation = train_or_validation, self,
+            f, path_list, train_or_validation = train_or_validation, image_data_generator=self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
