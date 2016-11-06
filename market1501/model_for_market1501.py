@@ -260,7 +260,7 @@ def compiler_def(model, *args, **kw):
 
 class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
     
-    def __init__(self, f, path_list, folder_dir = '/home/ubuntu/dataset/market1501/', train_or_validation = 'train', image_data_generator=None,
+    def __init__(self, f, path_list, user_name, train_or_validation = 'train', image_data_generator = None,
                  batch_size=150, shuffle=True, seed=1217,
                  dim_ordering='default'):
         
@@ -268,7 +268,7 @@ class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
             dim_ordering = K.image_dim_ordering()
         self.f = f
         self.path_list = path_list
-        self.folder_dir = folder_dir + 'boundingbox' + train_or_validation + '/'
+        self.folder_dir = '/home/' + user_name + '/dataset/market1501/boundingbox' + train_or_validation + '/'
         self.train_or_validation = train_or_validation
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
@@ -303,10 +303,10 @@ class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, f, path_list, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
+    def flow(self, f, path_list, user_name, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
         
         return NumpyArrayIterator_for_Market1501(
-            f, path_list, train_or_validation = train_or_validation, image_data_generator=self,
+            f, path_list, user_name, train_or_validation, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
@@ -335,9 +335,9 @@ if __name__ == '__main__':
     f=h5py.File('market1501_positive_index.h5','r')
     print 'begin to fit!'
     model.fit_generator(
-                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name)),
+                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name),
                         30000,
                         50,
-                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),train_or_validation='test'),
+                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test'),
                         nb_val_samples=6000
                         )
