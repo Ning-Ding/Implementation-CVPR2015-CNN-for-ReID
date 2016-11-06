@@ -8,59 +8,33 @@ import os
 import h5py
 import numpy as np
 
-
-def make_hdf5_index_for_market1501(train_or_test = 'train',user_name = 'ubuntu'):
-    f = h5py.File('market1501_index.h5')
+def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu'):
+    f = h5py.File('market1501_positive_index.h5')
     path_list = get_image_path_list(train_or_test = train_or_test, system_user_name = user_name)
-    total = len(path_list) ** 2
-    pos_index = []
-    neg_index = []
-    count = 0
-    for path1 in path_list:
-        for path2 in path_list:
-            count += 1
-            print 'already processed',count,'paths in',total,'paths.'
-            flag = compare_path(path1,path2)
-            if flag == 2:
-                neg_index.append([path1,path2])
-                print 'totally',len(neg_index),'negative pairs.'  
-            elif flag == 1:
-                pos_index.append([path1,path2])
-                print 'totally',len(pos_index),'positive pairs.'          
-    pos_index = np.array(pos_index)
-    np.random.shuffle(pos_index)
-    neg_index = np.array(neg_index)
-    np.random.shuffle(neg_index)
-    f_sub = f.create_group(train_or_test)
-    f_sub.create_dataset('positive',data=pos_index)
-    f_sub.create_dataset('negative',data=neg_index)
-    
-
-def compare_path(path1,path2):
-    if path1[6] == path2[6]:
-        return 0
-    else:
-        if path1[0:4] == path2[0:4]:
-            return 1
-        else:
-            return 2
+    index = []
+    i = 0
+    while i < len(path_list):
+        j = i + 1
+        while j < len(path_list) and path_list[j][0:4] == path_list[i][0:4]:
+            if path_list[j][6] != path_list[i][6]:
+                index.append([path_list[i],path_list[j]])
+                index.append([path_list[j],path_list[i]])
+                print len(index)
+            j += 1
+        i = j
+    print 'transforming the list to the numpy array......'
+    index = np.array(index)
+    print 'shuffling the numpy array......'
+    np.random.shuffle(index)
+    print 'storing the array to HDF5 file......'
+    f.create_dataset(train_or_test,data = index)
 
 
 def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
-    '''
-    get a list containing all the paths of images in the trainset
-    ---------------------------------------------------------------------------
-    INPUT:
-        parameters: model parameter object
-    OUTPUT:
-        a list with all the images' paths
-    ---------------------------------------------------------------------------
-    '''
     if train_or_test == 'train':
         folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtrain'
     else:
         folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtest'
-    assert os.path.exists(folder_path)
     assert os.path.isdir(folder_path)
     print 'already get all the image path.'
     return os.listdir(folder_path)
@@ -68,5 +42,5 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
     
 if __name__ == '__main__':
     user_name = raw_input('input your system user name:')
-    make_hdf5_index_for_market1501('train', user_name = user_name)
-    make_hdf5_index_for_market1501('test', user_name = user_name)
+    make_positive_index_market1501('train',user_name=user_name)
+    make_positive_index_market1501('test',user_name=user_name)
