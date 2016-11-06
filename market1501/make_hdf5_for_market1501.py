@@ -46,7 +46,7 @@ def compare_path(path1,path2):
             return 2
 
 
-def get_image_path_list(train_or_test = 'train',system_user_name):
+def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
     '''
     get a list containing all the paths of images in the trainset
     ---------------------------------------------------------------------------
