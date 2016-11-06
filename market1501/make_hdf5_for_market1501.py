@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 
 
-def make_hdf5_index_for_market1501(train_or_test = 'train',user_name):
+def make_hdf5_index_for_market1501(train_or_test = 'train',user_name = 'ubuntu'):
     f = h5py.File('market1501_index.h5')
     path_list = get_image_path_list(train_or_test = train_or_test, system_user_name = user_name)
     total = len(path_list) ** 2
