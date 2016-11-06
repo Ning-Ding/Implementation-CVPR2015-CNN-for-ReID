@@ -37,7 +37,7 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
         folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtest'
     assert os.path.isdir(folder_path)
     print 'already get all the image path.'
-    return os.listdir(folder_path)
+    return sorted(os.listdir(folder_path))
     
     
 if __name__ == '__main__':
