@@ -15,13 +15,16 @@ def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu')
     i = 0
     while i < len(path_list):
         j = i + 1
+        while j < len(path_list) and path_list[j][6] == path_list[i][6]:
+            j = i + 1
+        i = j - 1
         while j < len(path_list) and path_list[j][0:4] == path_list[i][0:4]:
             if path_list[j][6] != path_list[i][6]:
                 index.append([path_list[i],path_list[j]])
                 index.append([path_list[j],path_list[i]])
                 print len(index)
             j += 1
-        i = j
+        i += 1
     print 'transforming the list to the numpy array......'
     index = np.array(index)
     print 'shuffling the numpy array......'
