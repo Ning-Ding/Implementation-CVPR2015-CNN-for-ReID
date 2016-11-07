@@ -323,6 +323,18 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
         return NumpyArrayIterator_for_CUHK03(f, train_or_validation, self,batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
+def get_test_data(f):
+    a = np.array([f['a']['test'][str(i)][0] for i in range(100)])
+    b = np.array([f['b']['test'][str(i)][0] for i in range(100)])
+    return a,b
+
+def test(model,f):
+    a,b = get_test_data(f)
+    return model.predict_on_batch([a,b])
+
+
+
+
 if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
     user_name = raw_input('please input your system user name:')
