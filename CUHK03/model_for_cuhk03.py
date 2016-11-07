@@ -260,18 +260,18 @@ def compiler_def(model, *args, **kw):
 
 class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
     
-    def __init__(self, user_name, train_or_validation = 'train', image_data_generator = None,
+    def __init__(self, train_or_validation = 'train', image_data_generator = None,
                  batch_size=150, shuffle=True, seed=1217,
                  dim_ordering='default'):
         
         if dim_ordering == 'default':
             dim_ordering = K.image_dim_ordering()
-        self.fdata = h5py.File('/home/'+user_name+'/dataset/cuhk-03.mat')
-        self.findex = h5py.File('cuhk-03_for_train.h5')
+            
+        self.f = h5py.File('cuhk-03.h5','r')
         self.train_or_validation = train_or_validation
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
-        super(NumpyArrayIterator_for_CUHK03, self).__init__(self.findex['positive'][train_or_validation].shape[0], batch_size / 2, shuffle, seed)
+        super(NumpyArrayIterator_for_CUHK03, self).__init__(30000, batch_size / 2, shuffle, seed)
 
     def next(self):
         with self.lock:
@@ -279,28 +279,28 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
         batch_x1 = np.zeros(tuple([current_batch_size * 2] + [128,64,3]))
         batch_x2 = np.zeros(tuple([current_batch_size * 2] + [128,64,3]))
         batch_y  = np.zeros([current_batch_size * 2, 2])
+        
         for i, j in enumerate(index_array):
-            c,k,ja,jb = self.findex['positive'][self.train_or_validation][j]
-            x1 = np.array((Image.fromarray(self.fdata[self.fdata[self.fdata['labeled'][0][c]][ja][k]][:].transpose(2,1,0))).resize((64,128))) / 255.
-            x2 = np.array((Image.fromarray(self.fdata[self.fdata[self.fdata['labeled'][0][c]][jb][k]][:].transpose(2,1,0))).resize((64,128))) / 255.
+            
+            k = np.random.randint(len(self.f['a'][self.train_or_validation].keys()))
+            ja = np.random.randint(self.f['a'][self.train_or_validation][str(k)].shape[0])
+            jb = np.random.randint(self.f['b'][self.train_or_validation][str(k)].shape[0])
+            
+            x1 = self.f['a'][self.train_or_validation][str(k)][ja]
+            x2 = self.f['b'][self.train_or_validation][str(k)][jb]
             x1 = self.image_data_generator.random_transform(x1.astype('float32'))
             x2 = self.image_data_generator.random_transform(x2.astype('float32'))
+            
             batch_x1[2*i] = x1
             batch_x2[2*i] = x2
             batch_y[2*i][1] = 1
             
-            index_1 = self.findex['negative'][self.train_or_validation][:][np.random.randint(0,self.findex['negative'][self.train_or_validation][:].shape[0])]
-            index_2 = self.findex['negative'][self.train_or_validation][:][np.random.randint(0,self.findex['negative'][self.train_or_validation][:].shape[0])]
-            while True:
-                ja = np.random.randint(0,5)
-                if len(self.fdata[self.fdata[self.fdata['labeled'][0][index_1[0]]][ja][index_1[1]]].shape) == 3:
-                    break
-            while True:
-                jb = np.random.randint(5,10)
-                if len(self.fdata[self.fdata[self.fdata['labeled'][0][index_2[0]]][jb][index_2[1]]].shape) == 3:
-                    break
-            x1 = np.array((Image.fromarray(self.fdata[self.fdata[self.fdata['labeled'][0][index_1[0]]][ja][index_1[1]]][:].transpose(2,1,0))).resize((64,128))) / 255.
-            x2 = np.array((Image.fromarray(self.fdata[self.fdata[self.fdata['labeled'][0][index_2[0]]][jb][index_2[1]]][:].transpose(2,1,0))).resize((64,128))) / 255.    
+            ka,kb = np.random.choice(np.arange(len(self.f['a'][self.train_or_validation].keys())))            
+            ja = np.random.randint(self.f['a'][self.train_or_validation][str(ka)].shape[0])
+            jb = np.random.randint(self.f['b'][self.train_or_validation][str(kb)].shape[0])
+            
+            x1 = self.f['a'][self.train_or_validation][str(ka)][ja]
+            x2 = self.f['b'][self.train_or_validation][str(kb)][jb]
             
             batch_x1[2*i+1] = x1
             batch_x2[2*i+1] = x2
@@ -311,11 +311,9 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, user_name, train_or_validation = 'train', batch_size=150, shuffle=True, seed=1217):
+    def flow(self, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
         
-        return NumpyArrayIterator_for_CUHK03(
-            user_name, train_or_validation, self,
-            batch_size=batch_size, shuffle=shuffle, seed=seed)
+        return NumpyArrayIterator_for_CUHK03(train_or_validation, self,batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
 if __name__ == '__main__':
@@ -329,4 +327,4 @@ if __name__ == '__main__':
     fit_or_not = raw_input('going to fit?[y/n]')
     if fit_or_not == 'y':
         print 'begin to fit!'
-        model.fit_generator(Data_Generator.flow(user_name),30000,10,validation_data=Data_Generator.flow(user_name,train_or_validation='validation'),nb_val_samples=1000)
+        model.fit_generator(Data_Generator.flow(),30000,10,validation_data=Data_Generator.flow(train_or_validation='validation'),nb_val_samples=1000)
