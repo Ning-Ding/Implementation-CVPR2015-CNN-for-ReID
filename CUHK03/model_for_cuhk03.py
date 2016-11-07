@@ -310,10 +310,10 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, f, path_list, user_name, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
+    def flow(self, user_name, train_or_validation = 'train', batch_size=150, shuffle=True, seed=1217):
         
         return NumpyArrayIterator_for_CUHK03(
-            f, path_list, user_name, train_or_validation, self,
+            user_name, train_or_validation, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
