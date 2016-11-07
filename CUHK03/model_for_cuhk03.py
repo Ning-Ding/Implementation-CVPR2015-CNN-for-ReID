@@ -317,3 +317,15 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
+if __name__ == '__main__':
+    print 'default dim order is:',K.image_dim_ordering()
+    user_name = raw_input('please input your system user name:')
+    Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
+    model = model_def()
+    print 'model definition done.'
+    model = compiler_def(model)
+    print 'model compile done.'
+    fit_or_not = raw_input('going to fit?[y/n]')
+    if fit_or_not == 'y':
+        print 'begin to fit!'
+        model.fit_generator(Data_Generator.flow(user_name),30000,10,validation_data=Data_Generator.flow(user_name,train_or_validation='validation'),nb_val_samples=1000)
