@@ -260,23 +260,24 @@ def compiler_def(model, *args, **kw):
 
 class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
     
-    def __init__(self, train_or_validation = 'train', image_data_generator = None,
+    def __init__(self, f, train_or_validation = 'train', image_data_generator = None,
                  batch_size=150, shuffle=True, seed=1217,
                  dim_ordering='default'):
         
         if dim_ordering == 'default':
             dim_ordering = K.image_dim_ordering()
             
-        self.f = h5py.File('cuhk-03.h5','r')
-        self.length = len(self.f['a'][train_or_validation].keys())
+        self.f = f
+        self.length = len(f['a'][train_or_validation].keys())
         self.train_or_validation = train_or_validation
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
-        super(NumpyArrayIterator_for_CUHK03, self).__init__(30000, batch_size / 2, shuffle, seed)
+        super(NumpyArrayIterator_for_CUHK03, self).__init__(1000, batch_size / 2, shuffle, seed)
 
     def next(self):
         with self.lock:
             index_array, current_index, current_batch_size = next(self.index_generator)
+            
         batch_x1 = np.zeros(tuple([current_batch_size * 2] + [128,64,3]))
         batch_x2 = np.zeros(tuple([current_batch_size * 2] + [128,64,3]))
         batch_y  = np.zeros([current_batch_size * 2, 2])
@@ -312,14 +313,15 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
+    def flow(self, f, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
         
-        return NumpyArrayIterator_for_CUHK03(train_or_validation, self,batch_size=batch_size, shuffle=shuffle, seed=seed)
+        return NumpyArrayIterator_for_CUHK03(f, train_or_validation, self,batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
 if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
     user_name = raw_input('please input your system user name:')
+    f = h5py.File('cuhk-03.h5','r')
     Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
     model = model_def()
     print 'model definition done.'
@@ -328,4 +330,4 @@ if __name__ == '__main__':
     fit_or_not = raw_input('going to fit?[y/n]')
     if fit_or_not == 'y':
         print 'begin to fit!'
-        model.fit_generator(Data_Generator.flow(),30000,10,validation_data=Data_Generator.flow(train_or_validation='validation'),nb_val_samples=1000)
+        model.fit_generator(Data_Generator.flow(f),30000,10,validation_data=Data_Generator.flow(f,train_or_validation='validation'),nb_val_samples=1000)
