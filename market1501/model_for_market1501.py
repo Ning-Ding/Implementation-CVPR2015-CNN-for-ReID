@@ -358,7 +358,7 @@ if __name__ == '__main__':
         model.fit_generator(
                         Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name),
                         30000,
-                        50,
+                        10,
                         validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test'),
                         nb_val_samples=1000
                         )
