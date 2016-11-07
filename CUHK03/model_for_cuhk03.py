@@ -268,7 +268,7 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
             dim_ordering = K.image_dim_ordering()
             
         self.f = h5py.File('cuhk-03.h5','r')
-        self.length = len(self.f['a'][self.train_or_validation].keys())
+        self.length = len(self.f['a'][train_or_validation].keys())
         self.train_or_validation = train_or_validation
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
