@@ -300,8 +300,8 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
             batch_y[2*i][1] = 1
             
             ka,kb = np.random.choice(range(self.length),2)
-                while ka == 1155 or kb == 1155:
-                    ka,kb = np.random.choice(range(self.length),2)
+            while ka == 1155 or kb == 1155:
+                ka,kb = np.random.choice(range(self.length),2)
                    
             ja = np.random.randint(self.f['a'][self.train_or_validation][str(ka)].shape[0])
             jb = np.random.randint(self.f['b'][self.train_or_validation][str(kb)].shape[0])
