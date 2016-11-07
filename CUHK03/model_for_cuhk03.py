@@ -272,7 +272,7 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
         self.train_or_validation = train_or_validation
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
-        super(NumpyArrayIterator_for_CUHK03, self).__init__(1000, batch_size / 2, shuffle, seed)
+        super(NumpyArrayIterator_for_CUHK03, self).__init__(3000000, batch_size / 2, shuffle, seed)
 
     def next(self):
         with self.lock:
@@ -285,6 +285,8 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
         for i, j in enumerate(index_array):
             
             k = np.random.randint(self.length)
+            while k == 1155:
+                k = np.random.randint(self.length)
             ja = np.random.randint(self.f['a'][self.train_or_validation][str(k)].shape[0])
             jb = np.random.randint(self.f['b'][self.train_or_validation][str(k)].shape[0])
             
