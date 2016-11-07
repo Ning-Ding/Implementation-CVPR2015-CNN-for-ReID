@@ -42,7 +42,7 @@ def make_hdf5_for_cuhk03(file_path = '/home/lpc/dataset/cuhk-03.mat'):
                     fwbv.create_dataset(str(count_v),data = np.array(temp))
                     temp = []
                     count_v += 1
-                elif [i,k] in tes_index:
+                if [i,k] in tes_index:
                     for j in xrange(5):
                         if len(f[f[f['labeled'][0][i]][j][k]].shape) == 3:
                             temp.append(np.array((Image.fromarray(f[f[f['labeled'][0][i]][j][k]][:].transpose(2,1,0))).resize((64,128))) / 255.)
@@ -54,7 +54,7 @@ def make_hdf5_for_cuhk03(file_path = '/home/lpc/dataset/cuhk-03.mat'):
                     fwbe.create_dataset(str(count_e),data = np.array(temp))
                     temp = []
                     count_e += 1
-                else:
+                if [i,k] not in val_index and [i,k] not in tes_index:
                     for j in xrange(5):
                         if len(f[f[f['labeled'][0][i]][j][k]].shape) == 3:
                             temp.append(np.array((Image.fromarray(f[f[f['labeled'][0][i]][j][k]][:].transpose(2,1,0))).resize((64,128))) / 255.)
