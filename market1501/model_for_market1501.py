@@ -309,9 +309,26 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             f, path_list, user_name, train_or_validation, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
-def random_test(model, user_name = 'lpc', num = 10):
-    A,B = random_select(user_name, num)
+def random_test(model, f = None, user_name = 'lpc', num = 10):
+    if f is not None:
+        A,B = random_select_pos(f, user_name, num)
+    else:
+        A,B = random_select(user_name, num)        
+    
     return model.predict([A,B],batch_size = 100)
+
+def random_select_pos(f, user_name, num):
+    indexs = np.random.choice(range(f['test'].shape[0]))
+    A = []
+    B = []
+    for index in indexs:
+        path1 = f['test'][index,0]
+        path2 = f['test'][index,1]
+        print path1[0:7], path2[0:7]
+        A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path1)))
+        B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path2)))
+        
+    return np.array(A)/255.,np.array(B)/255.
 
 def random_select(user_name = 'ubuntu', num = 10):
     path_list = get_image_path_list('test',user_name)
@@ -324,10 +341,6 @@ def random_select(user_name = 'ubuntu', num = 10):
         B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path2)))
         
     return np.array(A)/255.,np.array(B)/255.
-
-
-
-
 
 if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
