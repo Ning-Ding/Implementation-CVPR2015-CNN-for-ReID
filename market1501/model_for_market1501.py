@@ -311,8 +311,7 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
 
 def random_test(model,user_name):
     A,B = random_select_100(user_name)
-    print A,B
-    model.predict([A,B],batch_size = 100)
+    return model.predict([A,B],batch_size = 100)
 
 
 
