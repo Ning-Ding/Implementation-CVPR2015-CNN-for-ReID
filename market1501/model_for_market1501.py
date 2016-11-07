@@ -7,7 +7,6 @@ Created on Sun Nov 06 18:08:01 2016
 
 import numpy as np
 np.random.seed(1217)
-import os
 import h5py
 import tensorflow as tf
 tf.python.control_flow_ops = tf
@@ -18,6 +17,7 @@ from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatt
 from keras.regularizers import l2
 from keras.optimizers import SGD
 from keras.preprocessing import image as pre_image
+from make_hdf5_for_market1501 import get_image_path_list,random_select_100
 
 def model_def(flag=0, weight_decay=0.0005):
     '''
@@ -309,19 +309,13 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             f, path_list, user_name, train_or_validation, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
+def random_test(model,user_name):
+    A,B = random_select_100(user_name)
+    print A,B
+    model.predict([A,B],batch_size = 100)
 
 
-def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
-    if train_or_test == 'train':
-        folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtrain'
-    else:
-        folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtest'
-    assert os.path.isdir(folder_path)
-    print 'already get all the image path.'
-    if train_or_test == 'train':
-        return sorted(os.listdir(folder_path))
-    else:
-        return sorted(os.listdir(folder_path))[6617:]
+
 
 
 if __name__ == '__main__':
@@ -339,5 +333,5 @@ if __name__ == '__main__':
                         30000,
                         50,
                         validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test'),
-                        nb_val_samples=6000
+                        nb_val_samples=1000
                         )
