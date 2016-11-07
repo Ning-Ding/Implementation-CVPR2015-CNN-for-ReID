@@ -7,6 +7,7 @@ Created on Sat Nov 05 21:53:32 2016
 import os
 import h5py
 import numpy as np
+from PIL import Image
 
 def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu'):
     f = h5py.File('market1501_positive_index.h5')
@@ -33,16 +34,35 @@ def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu')
 def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
     if train_or_test == 'train':
         folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtrain'
-    else:
+    elif train_or_test == 'test':
         folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtest'
+    elif train_or_test == 'query':
+        folder_path = '/home/' + system_user_name + '/dataset/market1501/query'
     assert os.path.isdir(folder_path)
     print 'already get all the image path.'
-    if train_or_test == 'train':
+    if train_or_test == 'train' or train_or_test == 'query':
         return sorted(os.listdir(folder_path))
-    else:
+    elif train_or_test == 'test':
         return sorted(os.listdir(folder_path))[6617:]
         
-    
+ 
+def random_select_100(user_name = 'ubuntu'):
+    path_list = get_image_path_list('query','ubuntu')
+    iden_list = sorted(np.random.choice(list(set([x[0:4] for x in path_list])),100),reverse=True)
+    A = []
+    B = []
+    for i in xrange(len(path_list)):
+        if len(iden_list) == 0:
+            break
+        if path_list[i][0:4] == iden_list[-1]:
+            A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/query/' + path_list[i])))
+            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/query/' + path_list[i+1])))
+            iden_list.pop()
+    return np.array(A)/255.,np.array(B)/255.
+
+
+
+   
     
 if __name__ == '__main__':
     user_name = raw_input('input your system user name:')
