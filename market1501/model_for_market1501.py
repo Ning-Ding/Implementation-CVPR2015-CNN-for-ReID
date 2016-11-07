@@ -309,17 +309,17 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             f, path_list, user_name, train_or_validation, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
-def random_test(model,user_name):
-    A,B = random_select(user_name)
+def random_test(model, user_name = 'lpc', num = 10):
+    A,B = random_select(user_name, num)
     return model.predict([A,B],batch_size = 100)
 
 def random_select(user_name = 'ubuntu', num = 10):
     path_list = get_image_path_list('test',user_name)
     A = []
     B = []
-    for i in xrange(10):
+    for i in xrange(num):
         path1, path2 = np.random.choice(path_list,2)
-        print path1[0:6], path2[0:6]
+        print path1[0:7], path2[0:7]
         A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path1)))
         B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path2)))
         
