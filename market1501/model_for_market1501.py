@@ -260,7 +260,7 @@ def compiler_def(model, *args, **kw):
 
 class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
     
-    def __init__(self, f, path_list, user_name, train_or_validation = 'train', image_data_generator = None,
+    def __init__(self, f, path_list, user_name, train_or_validation = 'train', flag = 0, image_data_generator = None,
                  batch_size=150, shuffle=True, seed=1217,
                  dim_ordering='default'):
         
@@ -270,6 +270,7 @@ class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
         self.path_list = path_list
         self.folder_dir = '/home/' + user_name + '/dataset/market1501/boundingbox' + train_or_validation + '/'
         self.train_or_validation = train_or_validation
+        self.flag = flag
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
         super(NumpyArrayIterator_for_Market1501, self).__init__(f[train_or_validation].shape[0], batch_size / 2, shuffle, seed)
@@ -282,9 +283,11 @@ class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
         batch_y  = np.zeros([current_batch_size * 2, 2])
         for i, j in enumerate(index_array):
             x1 = np.array(Image.open(self.folder_dir + f[self.train_or_validation][j,0])) / 255.
-            x2 = np.array(Image.open(self.folder_dir + f[self.train_or_validation][j,1])) / 255.            
-            x1 = self.image_data_generator.random_transform(x1.astype('float32'))
-            x2 = self.image_data_generator.random_transform(x2.astype('float32'))
+            x2 = np.array(Image.open(self.folder_dir + f[self.train_or_validation][j,1])) / 255.  
+            if np.random.rand() > self.flag:
+                x1 = self.image_data_generator.random_transform(x1.astype('float32'))
+            if np.random.rand() > self.flag:
+                x2 = self.image_data_generator.random_transform(x2.astype('float32'))
             batch_x1[2*i] = x1
             batch_x2[2*i] = x2
             batch_y[2*i][1] = 1
@@ -303,10 +306,10 @@ class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, f, path_list, user_name, train_or_validation = 'train',batch_size=150, shuffle=True, seed=1217):
+    def flow(self, f, path_list, user_name, train_or_validation = 'train', flag = 0, batch_size=150, shuffle=True, seed=1217):
         
         return NumpyArrayIterator_for_Market1501(
-            f, path_list, user_name, train_or_validation, self,
+            f, path_list, user_name, train_or_validation, flag, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 def random_test(model, f = None, user_name = 'lpc', num = 10):
@@ -356,9 +359,9 @@ if __name__ == '__main__':
     if fit_or_not == 'y':
         print 'begin to fit!'
         model.fit_generator(
-                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name),
+                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name,flag=0.9),
                         30000,
                         10,
-                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test'),
+                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test',flag=1),
                         nb_val_samples=1000
                         )
