@@ -318,7 +318,7 @@ def random_test(model, f = None, user_name = 'lpc', num = 10):
     return model.predict([A,B],batch_size = 100)
 
 def random_select_pos(f, user_name, num):
-    indexs = list(np.random.choice(range(f['test'].shape[0])))
+    indexs = list(np.random.choice(range(f['test'].shape[0]),num))
     A = []
     B = []
     for index in indexs:
