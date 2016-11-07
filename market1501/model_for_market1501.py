@@ -338,8 +338,10 @@ if __name__ == '__main__':
     model = compiler_def(model)
     print 'model compile done.'
     f=h5py.File('market1501_positive_index.h5','r')
-    print 'begin to fit!'
-    model.fit_generator(
+    fit_or_not = raw_input('going to fit?[y/n]')
+    if fit_or_not == 'y':
+        print 'begin to fit!'
+        model.fit_generator(
                         Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name),
                         30000,
                         50,
