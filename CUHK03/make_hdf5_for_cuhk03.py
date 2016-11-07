@@ -23,6 +23,31 @@ def make_hdf5_for_cuhk03(file_path = '/home/lpc/dataset/cuhk-03.mat'):
         val_index = (f[f['testsets'][0][0]][:].T - 1).tolist()
         tes_index = (f[f['testsets'][0][1]][:].T - 1).tolist()
         
+        index_train = []
+        index_valid = []
+        index_tests = []
+        for i in xrange(3):
+            for k in xrange(f[f['labeled'][0][i]][0].size):
+                if [i,k] in val_index:
+                    index_valid.append([i,k])
+                elif [i,k] in tes_index:
+                    index_tests.append([i,k])
+                else:
+                    index_train.append([i,k])
+                    
+        index_train = np.array(index_train)
+        index_valid = np.array(index_valid)
+        index_tests = np.array(index_tests)
+        np.random.shuffle(index_train)
+        np.random.shuffle(index_valid)
+        np.random.shuffle(index_tests)            
+        with h5py.File('cuhk-03_for_train.h5') as fw:
+            fn = fw.create_group('negative')
+            fn.create_dataset('train',data = index_train)
+            fn.create_dataset('validation',data = index_valid)
+            fn.create_dataset('test',data = index_tests)
+        
+        
         index_list = []
         for i in xrange(3):
             for k in xrange(f[f['labeled'][0][i]][0].size):
@@ -38,7 +63,8 @@ def make_hdf5_for_cuhk03(file_path = '/home/lpc/dataset/cuhk-03.mat'):
         index_list = np.array(index_list)
         np.random.shuffle(index_list)                    
         with h5py.File('cuhk-03_for_train.h5') as fw:
-            fw.create_dataset('train',data = index_list)
+            fp = fw.create_group('positive')
+            fp.create_dataset('train',data = index_list)
         
         index_list = []
         for i,k in val_index:
@@ -52,7 +78,7 @@ def make_hdf5_for_cuhk03(file_path = '/home/lpc/dataset/cuhk-03.mat'):
         index_list = np.array(index_list)
         np.random.shuffle(index_list)                    
         with h5py.File('cuhk-03_for_train.h5') as fw:
-            fw.create_dataset('validation',data = index_list)
+            fw['positive'].create_dataset('validation',data = index_list)
             
         index_list = []
         for i,k in tes_index:
@@ -66,7 +92,7 @@ def make_hdf5_for_cuhk03(file_path = '/home/lpc/dataset/cuhk-03.mat'):
         index_list = np.array(index_list)
         np.random.shuffle(index_list)                    
         with h5py.File('cuhk-03_for_train.h5') as fw:
-            fw.create_dataset('test',data = index_list)
+            fw['positive'].create_dataset('test',data = index_list)
         
 if __name__ == '__main__':
     user_name = raw_input('please input your system user name:')
