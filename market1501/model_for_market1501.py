@@ -17,7 +17,7 @@ from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatt
 from keras.regularizers import l2
 from keras.optimizers import SGD
 from keras.preprocessing import image as pre_image
-from make_hdf5_for_market1501 import get_image_path_list,random_select_100
+from make_hdf5_for_market1501 import get_image_path_list
 
 def model_def(flag=0, weight_decay=0.0005):
     '''
@@ -310,8 +310,20 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 def random_test(model,user_name):
-    A,B = random_select_100(user_name)
+    A,B = random_select(user_name)
     return model.predict([A,B],batch_size = 100)
+
+def random_select(user_name = 'ubuntu', num = 10):
+    path_list = get_image_path_list('test',user_name)
+    A = []
+    B = []
+    for i in xrange(10):
+        path1, path2 = np.random.choice(path_list,2)
+        print path1[0:6], path2[0:6]
+        A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path1)))
+        B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path2)))
+        
+    return np.array(A)/255.,np.array(B)/255.
 
 
 
