@@ -312,10 +312,11 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
 def random_test(model, f = None, user_name = 'lpc', num = 10):
     if f is not None:
         A,B = random_select_pos(f, user_name, num)
+        return model.predict([A,B],batch_size = 100)[:,1]
     else:
         A,B = random_select(user_name, num)        
+        return model.predict([A,B],batch_size = 100)[:,0]
     
-    return model.predict([A,B],batch_size = 100)
 
 def random_select_pos(f, user_name, num):
     indexs = list(np.random.choice(range(f['test'].shape[0]),num))
