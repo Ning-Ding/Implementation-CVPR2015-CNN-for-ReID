@@ -94,8 +94,8 @@ def model_def(flag=0, weight_decay=0.0005):
     if flag == 0:
         print 'now begin to compile the model with the difference between ones and neighbour matrixs.'
         
-        a1 = Input(shape=(160,60,3))
-        b1 = Input(shape=(160,60,3))
+        a1 = Input(shape=(128,64,3))
+        b1 = Input(shape=(128,64,3))
         share = Convolution2D(20,5,5,dim_ordering='tf', W_regularizer=l2(l=weight_decay))
         a2 = share(a1)
         b2 = share(b1)
@@ -129,8 +129,8 @@ def model_def(flag=0, weight_decay=0.0005):
     if flag == 1:
         print 'now begin to compile the model with the difference between both neighbour matrixs.'
         
-        a1 = Input(shape=(160,60,3))
-        b1 = Input(shape=(160,60,3))
+        a1 = Input(shape=(128,64,3))
+        b1 = Input(shape=(128,64,3))
         share = Convolution2D(20,5,5,dim_ordering='tf', W_regularizer=l2(l=weight_decay))
         a2 = share(a1)
         b2 = share(b1)
