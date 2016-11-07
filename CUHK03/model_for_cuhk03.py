@@ -94,8 +94,8 @@ def model_def(flag=0, weight_decay=0.0005):
     if flag == 0:
         print 'now begin to compile the model with the difference between ones and neighbour matrixs.'
         
-        a1 = Input(shape=(128,64,3))
-        b1 = Input(shape=(128,64,3))
+        a1 = Input(shape=(160,60,3))
+        b1 = Input(shape=(160,60,3))
         share = Convolution2D(20,5,5,dim_ordering='tf', W_regularizer=l2(l=weight_decay))
         a2 = share(a1)
         b2 = share(b1)
@@ -129,8 +129,8 @@ def model_def(flag=0, weight_decay=0.0005):
     if flag == 1:
         print 'now begin to compile the model with the difference between both neighbour matrixs.'
         
-        a1 = Input(shape=(128,64,3))
-        b1 = Input(shape=(128,64,3))
+        a1 = Input(shape=(160,60,3))
+        b1 = Input(shape=(160,60,3))
         share = Convolution2D(20,5,5,dim_ordering='tf', W_regularizer=l2(l=weight_decay))
         a2 = share(a1)
         b2 = share(b1)
@@ -268,6 +268,7 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
             dim_ordering = K.image_dim_ordering()
             
         self.f = h5py.File('cuhk-03.h5','r')
+        self.length = len(self.f['a'][self.train_or_validation].keys())
         self.train_or_validation = train_or_validation
         self.image_data_generator = image_data_generator
         self.dim_ordering = dim_ordering
@@ -282,7 +283,7 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
         
         for i, j in enumerate(index_array):
             
-            k = np.random.randint(len(self.f['a'][self.train_or_validation].keys()))
+            k = np.random.randint(self.length)
             ja = np.random.randint(self.f['a'][self.train_or_validation][str(k)].shape[0])
             jb = np.random.randint(self.f['b'][self.train_or_validation][str(k)].shape[0])
             
@@ -295,7 +296,7 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
             batch_x2[2*i] = x2
             batch_y[2*i][1] = 1
             
-            ka,kb = np.random.choice(np.arange(len(self.f['a'][self.train_or_validation].keys())))            
+            ka,kb = np.random.choice(range(self.length),2)            
             ja = np.random.randint(self.f['a'][self.train_or_validation][str(ka)].shape[0])
             jb = np.random.randint(self.f['b'][self.train_or_validation][str(kb)].shape[0])
             
