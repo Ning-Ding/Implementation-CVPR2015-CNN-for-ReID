@@ -47,7 +47,7 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
         
  
 def random_select_100(user_name = 'ubuntu'):
-    path_list = get_image_path_list('query','ubuntu')
+    path_list = get_image_path_list('query',user_name)
     iden_list = sorted(np.random.choice(list(set([x[0:4] for x in path_list])),100),reverse=True)
     A = []
     B = []
