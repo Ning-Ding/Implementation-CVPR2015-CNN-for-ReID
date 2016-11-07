@@ -289,7 +289,8 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
             batch_x2[2*i] = x2
             batch_y[2*i][1] = 1
             
-            index_1,index_2 = np.random.choice(self.findex['negative'][self.train_or_validation][:],2)
+            index_1 = self.findex['negative'][self.train_or_validation][:][np.random.randint(0,self.findex['negative'][self.train_or_validation][:].shape[0])]
+            index_2 = self.findex['negative'][self.train_or_validation][:][np.random.randint(0,self.findex['negative'][self.train_or_validation][:].shape[0])]
             while True:
                 ja = np.random.randint(0,5)
                 if len(self.fdata[self.fdata[self.fdata['labeled'][0][index_1[0]]][ja][index_1[1]]].shape) == 3:
