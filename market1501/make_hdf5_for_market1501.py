@@ -70,7 +70,10 @@ def get_data_for_cmc(user_name = 'ubuntu'):
             break
         if path_list[i][0:4] == iden_list[-1]:
             A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i])))
-            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+1])))
+            j = 1
+            while path_list[i][6] == path_list[i+j][6]:
+                j += 1
+            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+j])))
             iden_list.pop()
     return np.array(A)/255.,np.array(B)/255.
 
