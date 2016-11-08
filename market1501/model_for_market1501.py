@@ -311,6 +311,19 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
         return NumpyArrayIterator_for_Market1501(
             f, path_list, user_name, train_or_validation, flag, self,
             batch_size=batch_size, shuffle=shuffle, seed=seed)
+    
+    def agumentation(self, X, rounds=1, seed=None):
+        
+        if seed is not None:
+            np.random.seed(seed)
+
+        X = np.copy(X)
+        aX = np.zeros(tuple([rounds * X.shape[0]] + list(X.shape)[1:]))
+        for r in range(rounds):
+            for i in range(X.shape[0]):
+                aX[i + r * X.shape[0]] = self.random_transform(X[i])
+        X = aX
+        return X
 
 def random_test(model, f = None, user_name = 'lpc', num = 10):
     if f is not None:
@@ -347,8 +360,11 @@ def random_select(user_name = 'ubuntu', num = 10):
     return np.array(A)/255.,np.array(B)/255.
 
 
-def cmc(model):
+def cmc(model, random_translate = False, Data_Generator = Data_Generator):
     a,b = random_select_100(num = 751)
+    if random_translate:
+        a = Data_Generator.agumentation(a)
+        b = Data_Generator.agumentation(b)
     return cmc_curve(model,a,b)
 
 
