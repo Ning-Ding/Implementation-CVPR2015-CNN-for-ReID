@@ -17,7 +17,7 @@ from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatt
 from keras.regularizers import l2
 from keras.optimizers import SGD
 from keras.preprocessing import image as pre_image
-from make_hdf5_for_market1501 import get_image_path_list
+from make_hdf5_for_market1501 import get_image_path_list,random_select_100
 
 def model_def(flag=0, weight_decay=0.0005):
     '''
