@@ -19,7 +19,7 @@ from keras.optimizers import SGD
 from keras.preprocessing import image as pre_image
 from make_hdf5_for_market1501 import get_image_path_list
 
-def model_def(flag=0, weight_decay=0.0005):
+def model_def(gpu_device='/gpu:0', flag=0, weight_decay=0.0005):
     '''
     define the model structure
     ---------------------------------------------------------------------------
@@ -351,7 +351,8 @@ if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
     user_name = raw_input('please input your system user name:')
     Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
-    model = model_def()
+    gpu_device = raw_input('please identify which gpu you want to use:')
+    model = model_def(gpu_device)
     print 'model definition done.'
     model = compiler_def(model)
     print 'model compile done.'
