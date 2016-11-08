@@ -323,7 +323,7 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
     def flow(self, f, train_or_validation = 'train', flag = 0, batch_size=150, shuffle=True, seed=1217):
         
-        return NumpyArrayIterator_for_CUHK03(f, train_or_validation, flag = flag, self, batch_size=batch_size, shuffle=shuffle, seed=seed)
+        return NumpyArrayIterator_for_CUHK03(f, train_or_validation, flag, self, batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
 def cmc(model,f):
