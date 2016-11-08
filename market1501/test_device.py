@@ -94,7 +94,7 @@ def model_def(gpu_device='/gpu:0', flag=0, weight_decay=0.0005):
     if flag == 0:
         print 'now begin to compile the model with the difference between ones and neighbour matrixs.'
         g = tf.get_default_graph()
-        with g.device('/gpu:0'):
+        with g.device(gpu_device):
             a1 = Input(shape=(128,64,3))
             b1 = Input(shape=(128,64,3))
             share = Convolution2D(20,5,5,dim_ordering='tf', W_regularizer=l2(l=weight_decay))
