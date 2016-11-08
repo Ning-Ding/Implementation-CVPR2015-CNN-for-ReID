@@ -16,13 +16,13 @@
 
 ## The dataset HDF5 structure
 
->**`cuhk-03.h5`**
+### >**`cuhk-03.h5`**
 >>**`'a'`**
 >>>`'train'`
 >>>`'validation'`
 >>>`'test'`
 
->>**`'b'`
->>>`'train'`
->>>`'validation'`
->>>`'test'`**
+>>**`'b'`**
+>>>**`'train'`**
+>>>**`'validation'`**
+>>>**`'test'`**
