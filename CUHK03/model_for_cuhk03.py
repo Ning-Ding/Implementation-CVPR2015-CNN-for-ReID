@@ -387,7 +387,7 @@ def train(model,weights_name='weights_on_cuhk03_0_0',train_num=20,one_epoch=1500
         for i in xrange(train_num):
             model.fit_generator(Data_Generator.flow(f,flag = flag_train),one_epoch,epoch_num,validation_data=Data_Generator.flow(f,train_or_validation=which_val_data,flag=flag_val),nb_val_samples=nb_val_samples)
             print cmc(model)
-            model.save_weights(weights_name+'_'+str(i)+'.h5')
+            model.save_weights('weights/'+weights_name+'_'+str(i)+'.h5')
 
 
 if __name__ == '__main__':
