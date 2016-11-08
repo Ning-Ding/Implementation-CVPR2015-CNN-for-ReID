@@ -353,3 +353,16 @@ if __name__ == '__main__':
     Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
     model = model_def()
     print 'model definition done.'
+    model = compiler_def(model)
+    print 'model compile done.'
+    f=h5py.File('market1501_positive_index.h5','r')
+    fit_or_not = raw_input('going to fit?[y/n]')
+    if fit_or_not == 'y':
+        print 'begin to fit!'
+        model.fit_generator(
+                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name,flag=0.9),
+                        30000,
+                        2,
+                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test',flag=1),
+                        nb_val_samples=1000
+                        )
