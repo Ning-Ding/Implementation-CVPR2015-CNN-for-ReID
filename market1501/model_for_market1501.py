@@ -17,7 +17,7 @@ from keras.layers import Input,Dense,Convolution2D,Activation,MaxPooling2D,Flatt
 from keras.regularizers import l2
 from keras.optimizers import SGD
 from keras.preprocessing import image as pre_image
-from make_hdf5_for_market1501 import get_image_path_list,random_select_100
+from make_hdf5_for_market1501 import get_image_path_list, get_data_for_cmc
 
 def model_def(flag=0, weight_decay=0.0005):
     '''
@@ -361,7 +361,7 @@ def random_select(user_name = 'ubuntu', num = 10):
 
 
 def cmc(model, random_translate = False):
-    a,b = random_select_100(num = 750)
+    a,b = get_data_for_cmc()
     if random_translate:
         Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         a = Data_Generator.agumentation(a)
