@@ -360,9 +360,10 @@ def random_select(user_name = 'ubuntu', num = 10):
     return np.array(A)/255.,np.array(B)/255.
 
 
-def cmc(model, random_translate = False, Data_Generator = Data_Generator):
+def cmc(model, random_translate = False):
     a,b = random_select_100(num = 751)
     if random_translate:
+        Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         a = Data_Generator.agumentation(a)
         b = Data_Generator.agumentation(b)
     return cmc_curve(model,a,b)
