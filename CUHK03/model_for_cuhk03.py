@@ -321,11 +321,16 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, f, train_or_validation = 'train', flag = 1, batch_size=150, shuffle=True, seed=1217):
+    def flow(self, f, train_or_validation = 'train', flag = 0, batch_size=150, shuffle=True, seed=1217):
         
         return NumpyArrayIterator_for_CUHK03(f, train_or_validation, flag = flag, self, batch_size=batch_size, shuffle=shuffle, seed=seed)
 
 
+def cmc(model,f):
+    a,b = get_test_data(f)
+    return cmc_curve(model,a,b)
+    
+    
 def get_test_data(f):
     a = np.array([f['a']['test'][str(i)][0] for i in range(100)])
     b = np.array([f['b']['test'][str(i)][0] for i in range(100)])
@@ -336,17 +341,17 @@ def test(model,f):
     return model.predict_on_batch([a,b])
 
 
-def cmc_curve(camera1, camera2, model, rank_max=50):
+def cmc_curve(model, camera1, camera2, rank_max=50):
     num = camera1.shape[0]    
-    similarity_order = np.zeros((num))
     rank = []
     score = []    
+    camera_batch1 = np.zeros(camera1.shape)
     for i in range(num):
         for j in range(num):
-            s = model.predict([camera1[i][:][:][:].reshape(1,160,60,3), camera2[i][:][:][:].reshape(1,160,60,3)])
-            similarity_rate = s[0][0]
-            similarity_order[j] = similarity_rate
-        similarity_rate_sorted = np.argsort(similarity_order)
+            camera_batch1[j] = camera1[i]
+        similarity_batch = model.predict_on_batch([camera_batch1, camera2])
+        sim_trans = similarity_batch.transpose()
+        similarity_rate_sorted = np.argsort(sim_trans[0])
         for k in range(num):
             if similarity_rate_sorted[k] == i:
                 rank.append(k+1)
@@ -355,7 +360,7 @@ def cmc_curve(camera1, camera2, model, rank_max=50):
     for i in range(rank_max):
         rank_val = rank_val + len([j for j in rank if i == j-1])        
         score.append(rank_val / float(num))
-    return np.array(score)
+    return np.array(score)        
 
 if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
