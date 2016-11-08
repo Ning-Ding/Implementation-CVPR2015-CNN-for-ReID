@@ -347,6 +347,12 @@ def random_select(user_name = 'ubuntu', num = 10):
     return np.array(A)/255.,np.array(B)/255.
 
 
+def cmc(model):
+    a,b = random_select_100(num = 751)
+    return cmc_curve(model,a,b)
+
+
+
 def cmc_curve(model, camera1, camera2, rank_max=50):
     num = camera1.shape[0]    
     rank = []
