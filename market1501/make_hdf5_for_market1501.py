@@ -47,7 +47,7 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
         
  
 def random_select_100(user_name = 'ubuntu', num = 100):
-    path_list = get_image_path_list('query',user_name)
+    path_list = get_image_path_list('test',user_name)
     iden_list = sorted(np.random.choice(list(set([x[0:4] for x in path_list])),num),reverse=True)
     A = []
     B = []
@@ -55,8 +55,8 @@ def random_select_100(user_name = 'ubuntu', num = 100):
         if len(iden_list) == 0:
             break
         if path_list[i][0:4] == iden_list[-1]:
-            A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/query/' + path_list[i])))
-            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/query/' + path_list[i+1])))
+            A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i])))
+            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+1])))
             iden_list.pop()
     return np.array(A)/255.,np.array(B)/255.
 
