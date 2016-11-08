@@ -8,9 +8,9 @@ This architechture is implemented based on `Keras` with `Tensorflow` backen usin
 
 ## Train the model on which dataset?
 
-1. [`market-1501`]()
+1. [`Market-1501`]()
 
-2. [`cuhk-03`]()
+2. [`CUHK-03`]()
 
 ## The model structure
 
