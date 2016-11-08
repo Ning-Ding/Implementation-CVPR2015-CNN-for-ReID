@@ -339,8 +339,10 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
         X = aX
         return X
 
-def cmc(model, random_translate = False, f = f, Data_Generator = Data_Generator):
-    a,b = get_test_data(f)
+def cmc(model, random_translate = False):
+    ff = h5py.File('cuhk-03.h5','r')
+    a,b = get_test_data(ff)
+    Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
     if random_translate:
         a = Data_Generator.agumentation(a)
         b = Data_Generator.agumentation(b)
