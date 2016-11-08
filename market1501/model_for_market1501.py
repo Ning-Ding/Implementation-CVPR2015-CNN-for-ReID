@@ -389,24 +389,26 @@ def cmc_curve(model, camera1, camera2, rank_max=50):
     for i in range(rank_max):
         rank_val = rank_val + len([j for j in rank if i == j-1])        
         score.append(rank_val / float(num))
-    return np.array(score)        
+    return np.array(score)  
+
+def train(model,weights_name='weights_on_market1501_0_0',train_num=20,one_epoch=1500000,epoch_num=1,flag_train=0,flag_val=1,nb_val_samples=1000,user_name='ubuntu'):
+    with h5py.File('market1501_positive_index.h5','r') as f:
+        Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
+        for i in xrange(train_num):
+            model.fit_generator(
+                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name,flag=flag_train),
+                        one_epoch,
+                        epoch_num,
+                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test',flag=flag_val),
+                        nb_val_samples=nb_val_samples
+                        )
+            print cmc(model)
+            model.save_weights('weights/'+weights_name+'_'+str(i)+'.h5')
 
 if __name__ == '__main__':
     print 'default dim order is:',K.image_dim_ordering()
     user_name = raw_input('please input your system user name:')
-    Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
     model = model_def()
     print 'model definition done.'
     model = compiler_def(model)
     print 'model compile done.'
-    f=h5py.File('market1501_positive_index.h5','r')
-    fit_or_not = raw_input('going to fit?[y/n]')
-    if fit_or_not == 'y':
-        print 'begin to fit!'
-        model.fit_generator(
-                        Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name,flag=0.9),
-                        30000,
-                        10,
-                        validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test',flag=1),
-                        nb_val_samples=1000
-                        )
