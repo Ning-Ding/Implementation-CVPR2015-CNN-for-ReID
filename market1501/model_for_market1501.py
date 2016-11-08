@@ -282,8 +282,8 @@ class NumpyArrayIterator_for_Market1501(pre_image.Iterator):
         batch_x2 = np.zeros(tuple([current_batch_size * 2] + [128,64,3]))
         batch_y  = np.zeros([current_batch_size * 2, 2])
         for i, j in enumerate(index_array):
-            x1 = np.array(Image.open(self.folder_dir + f[self.train_or_validation][j,0])) / 255.
-            x2 = np.array(Image.open(self.folder_dir + f[self.train_or_validation][j,1])) / 255.  
+            x1 = np.array(Image.open(self.folder_dir + self.f[self.train_or_validation][j,0])) / 255.
+            x2 = np.array(Image.open(self.folder_dir + self.f[self.train_or_validation][j,1])) / 255.  
             if np.random.rand() > self.flag:
                 x1 = self.image_data_generator.random_transform(x1.astype('float32'))
             if np.random.rand() > self.flag:
