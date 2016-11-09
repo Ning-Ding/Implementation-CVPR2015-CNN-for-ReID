@@ -391,12 +391,14 @@ def cmc_curve(model, camera1, camera2, rank_max=50):
         score.append(rank_val / float(num))
     return np.array(score)  
 
-def train(model,weights_name='weights_on_market1501_0_0',train_num=40,one_epoch=300000,epoch_num=1,flag_train=0,flag_val=1,nb_val_samples=1000,user_name='ubuntu'):
+def train(model,weights_name='weights_on_market1501_0_0',train_num=40,one_epoch=300000,epoch_num=1,flag = None, flag_train=0,flag_val=1,nb_val_samples=1000,user_name='ubuntu'):
     with h5py.File('market1501_positive_index.h5','r') as f:
         Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         Rank1s = []
         for i in xrange(train_num):
             print 'number',i,'in',train_num
+            if flag == 'random':
+                flag_train = np.random.rand() / 2 + 0.5
             model.fit_generator(
                         Data_Generator.flow(f,get_image_path_list(system_user_name=user_name),user_name,flag=flag_train),
                         one_epoch,
