@@ -94,21 +94,16 @@ def random_select_100(user_name = 'ubuntu', num = 100):
     return np.array(A)/255.,np.array(B)/255.
 
 def get_data_for_cmc(user_name = 'ubuntu'):
-    path_list = get_image_path_list('test',user_name)
-    iden_list = sorted(list(set([x[0:4] for x in path_list])),reverse=True)
-    A = []
-    B = []
-    for i in xrange(len(path_list)):
-        if len(iden_list) == 0:
-            break
-        if path_list[i][0:4] == iden_list[-1]:
-            A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i])))
-            j = 1
-            while iden_list[-1] == path_list[i+j][0:4]:
-                j += 1
-            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+j-1])))
-            iden_list.pop()
-    return np.array(A)/255.,np.array(B)/255.
+    with h5py.File('test.h5','r') as f:
+        A = []
+        B = []
+        id_list = f.keys()
+        for i in id_list:
+            c_list = f[i].keys()
+            c1,c2 = np.random.choice(c_list,2)
+            A.append(f[i][c1][np.random.randint(f[i][c1].shape[0])])
+            B.append(f[i][c2][np.random.randint(f[i][c2].shape[0])])
+        return np.array(A)/255.,np.array(B)/255.
 
    
     
