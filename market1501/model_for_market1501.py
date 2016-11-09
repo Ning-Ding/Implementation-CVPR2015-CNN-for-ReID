@@ -403,7 +403,7 @@ def train(model,weights_name='weights_on_market1501_0_0',train_num=20,one_epoch=
                         validation_data=Data_Generator.flow(f,get_image_path_list(train_or_test='test',system_user_name=user_name),user_name,train_or_validation='test',flag=flag_val),
                         nb_val_samples=nb_val_samples
                         )
-            Rank1s.append(cmc(model)[0])
+            Rank1s.append(round(cmc(model)[0],2))
             print Rank1s
             model.save_weights('weights/'+weights_name+'_'+str(i)+'.h5')
         return Rank1s
