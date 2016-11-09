@@ -33,7 +33,7 @@ def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu')
 
 def make_test_hdf5(user_name='ubuntu'):
     with h5py.File('test.h5') as f:
-        path_list = get_image_path_list(train_or_test='test',user_name=user_name)
+        path_list = get_image_path_list(train_or_test='test')
         i = path_list[0][0:4]
         c = path_list[0][6]
         temp = []
