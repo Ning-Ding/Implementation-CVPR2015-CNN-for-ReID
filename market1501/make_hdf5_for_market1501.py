@@ -51,8 +51,8 @@ def make_test_hdf5(user_name='ubuntu'):
                     print c
                     temp.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path)))
             else:
-                fi = f.create_group(i)
                 i = path[0:4]
+                fi = f.create_group(i)                
                 print i
                 c = path[6]
                 print c
