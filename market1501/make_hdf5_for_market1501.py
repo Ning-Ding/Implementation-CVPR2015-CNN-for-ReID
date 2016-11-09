@@ -39,7 +39,6 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
     elif train_or_test == 'query':
         folder_path = '/home/' + system_user_name + '/dataset/market1501/query'
     assert os.path.isdir(folder_path)
-    print 'already get all the image path.'
     if train_or_test == 'train' or train_or_test == 'query':
         return sorted(os.listdir(folder_path))
     elif train_or_test == 'test':
@@ -56,7 +55,10 @@ def random_select_100(user_name = 'ubuntu', num = 100):
             break
         if path_list[i][0:4] == iden_list[-1]:
             A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i])))
-            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+1])))
+            j = 1
+            while path_list[i][6] == path_list[i+j][6]:
+                j += 1
+            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+j])))
             iden_list.pop()
     return np.array(A)/255.,np.array(B)/255.
 
