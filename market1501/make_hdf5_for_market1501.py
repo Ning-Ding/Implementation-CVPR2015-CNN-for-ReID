@@ -31,6 +31,36 @@ def make_positive_index_market1501(train_or_test = 'train',user_name = 'ubuntu')
     f.create_dataset(train_or_test,data = index)
 
 
+def make_test_hdf5(user_name='ubuntu'):
+    with h5py.File('test.h5') as f:
+        path_list = get_image_path_list(train_or_test='test',user_name=user_name)
+        i = path_list[0][0:4]
+        c = path_list[0][6]
+        temp = []
+        fi = f.create_group(i)
+        for path in path_list:
+            print path
+            if path[0:4] == i:
+                if path[6] == c:
+                    temp.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path)))
+                else:
+                    print len(temp)
+                    fi.create_dataset(c,data = np.array(temp))
+                    temp = []
+                    c = path[6]
+                    print c
+                    temp.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path)))
+            else:
+                fi = f.create_group(i)
+                i = path[0:4]
+                print i
+                c = path[6]
+                print c
+                temp = []
+                temp.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path)))
+    
+    
+    
 def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
     if train_or_test == 'train':
         folder_path = '/home/' + system_user_name + '/dataset/market1501/boundingboxtrain'
