@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 06 18:08:01 2016
-
-@author: dingning
-"""
-
 import numpy as np
 np.random.seed(1217)
 import h5py
