@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Nov 05 21:53:32 2016
-
-@author: dingning
-"""
 import os
 import h5py
 import numpy as np
@@ -74,24 +69,6 @@ def get_image_path_list(train_or_test = 'train',system_user_name = 'ubuntu'):
         return sorted(os.listdir(folder_path))
     elif train_or_test == 'test':
         return sorted(os.listdir(folder_path))[6617:]
-        
- 
-def random_select_100(user_name = 'ubuntu', num = 100):
-    path_list = get_image_path_list('test',user_name)
-    iden_list = sorted(np.random.choice(list(set([x[0:4] for x in path_list])),num),reverse=True)
-    A = []
-    B = []
-    for i in xrange(len(path_list)):
-        if len(iden_list) == 0:
-            break
-        if path_list[i][0:4] == iden_list[-1]:
-            A.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i])))
-            j = 1
-            while path_list[i][6] == path_list[i+j][6]:
-                j += 1
-            B.append(np.array(Image.open('/home/' + user_name + '/dataset/market1501/boundingboxtest/' + path_list[i+j])))
-            iden_list.pop()
-    return np.array(A)/255.,np.array(B)/255.
 
 def get_data_for_cmc(user_name = 'ubuntu'):
     with h5py.File('test.h5','r') as f:
@@ -105,8 +82,6 @@ def get_data_for_cmc(user_name = 'ubuntu'):
             B.append(f[i][c2][np.random.randint(f[i][c2].shape[0])])
         return np.array(A)/255.,np.array(B)/255.
 
-   
-    
 if __name__ == '__main__':
     user_name = raw_input('input your system user name:')
     make_positive_index_market1501('train',user_name=user_name)
