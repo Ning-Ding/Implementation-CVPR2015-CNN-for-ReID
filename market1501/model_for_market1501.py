@@ -364,7 +364,7 @@ def cmc(model):
     a,b = get_data_for_cmc()
     return cmc_curve(model,a,b)
 
-def train(model,weights_name='weights_on_market1501_0_0',train_num=40,one_epoch=300000,epoch_num=1,flag_random=False,random_pattern=lambda x:x/2+0.5, flag_train=0,flag_val=1,nb_val_samples=1000,user_name='ubuntu'):
+def train(model,weights_name='weights_on_market1501_0_0',train_num=100,one_epoch=30000,epoch_num=1,flag_random=False,random_pattern=lambda x:x/2+0.5, flag_train=0,flag_val=1,nb_val_samples=1000,user_name='ubuntu'):
     with h5py.File('market1501_positive_index.h5','r') as f:
         Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         Rank1s = []
