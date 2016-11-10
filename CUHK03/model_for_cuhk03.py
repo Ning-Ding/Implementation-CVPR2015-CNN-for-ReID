@@ -370,16 +370,17 @@ def _get_test_data(val_or_test='test'):
         return a,b
 
 
-def train(model,weights_name='weights_on_cuhk03_0_0',train_num=40,one_epoch=150000,epoch_num=1,flag_random=False,flag_train=0,flag_val=1,which_val_data='validation',nb_val_samples=1000):
+def train(model,weights_name='weights_on_cuhk03_0_0',train_num=100,one_epoch=30000,epoch_num=1,flag_random=lambda x:x/2+0.4,random_pattern=None,flag_train=0,flag_val=1,which_val_data='validation',nb_val_samples=1000):
     with h5py.File('cuhk-03.h5','r') as f:
         Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         Rank1s = []
         for i in xrange(train_num):
             print 'number',i,'in',train_num
             if flag_random:
-                flag_train = np.random.rand() / 2 + 0.25
+                rand_x = np.random.rand()
+                flag_train = random_pattern(rand_x)
             model.fit_generator(Data_Generator.flow(f,flag = flag_train),one_epoch,epoch_num,validation_data=Data_Generator.flow(f,train_or_validation=which_val_data,flag=flag_val),nb_val_samples=nb_val_samples)
-            Rank1s.append(round(cmc(model)[0],2))
+            Rank1s.append(round(cmc(model)[0],2))          
             print Rank1s
             model.save_weights('weights/'+weights_name+'_'+str(i)+'.h5')
         return Rank1s
