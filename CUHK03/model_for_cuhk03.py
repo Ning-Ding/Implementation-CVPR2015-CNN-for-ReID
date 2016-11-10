@@ -339,43 +339,42 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
         X = aX
         return X
 
-def cmc(model, val_or_test='test'):
-    with h5py.File('cuhk-03.h5','r') as ff:
-        a,b = get_test_data(ff,val_or_test)
-        return cmc_curve(model,a,b)
-    
-    
-def get_test_data(f,val_or_test='test'):
-    a = np.array([f['a'][val_or_test][str(i)][0] for i in range(100)])
-    b = np.array([f['b'][val_or_test][str(i)][0] for i in range(100)])
-    return a,b
-
 def test(model,val_or_test='test'):
-    with h5py.File('cuhk-03.h5','r') as ff:
-        a,b = get_test_data(ff,val_or_test)
-        return model.predict_on_batch([a,b])
+    a,b = _get_test_data(val_or_test)
+    return model.predict_on_batch([a,b])
 
-
-def cmc_curve(model, camera1, camera2, rank_max=50):
-    num = camera1.shape[0]    
-    rank = []
-    score = []    
-    camera_batch1 = np.zeros(camera1.shape)
-    for i in range(num):
-        for j in range(num):
-            camera_batch1[j] = camera1[i]
-        similarity_batch = model.predict_on_batch([camera_batch1, camera2])
-        sim_trans = similarity_batch.transpose()
-        similarity_rate_sorted = np.argsort(sim_trans[0])
-        for k in range(num):
-            if similarity_rate_sorted[k] == i:
-                rank.append(k+1)
-                break
-    rank_val = 0
-    for i in range(rank_max):
-        rank_val = rank_val + len([j for j in rank if i == j-1])        
-        score.append(rank_val / float(num))
-    return np.array(score)        
+def cmc(model, val_or_test='test'):
+    
+        a,b = _get_test_data(val_or_test)
+        
+        def _cmc_curve(model, camera1, camera2, rank_max=50):
+            num = camera1.shape[0]    
+            rank = []
+            score = []    
+            camera_batch1 = np.zeros(camera1.shape)
+            for i in range(num):
+                for j in range(num):
+                    camera_batch1[j] = camera1[i]
+                similarity_batch = model.predict_on_batch([camera_batch1, camera2])
+                sim_trans = similarity_batch.transpose()
+                similarity_rate_sorted = np.argsort(sim_trans[0])
+                for k in range(num):
+                    if similarity_rate_sorted[k] == i:
+                        rank.append(k+1)
+                        break
+            rank_val = 0
+            for i in range(rank_max):
+                rank_val = rank_val + len([j for j in rank if i == j-1])        
+                score.append(rank_val / float(num))
+            return np.array(score)                
+        
+        return _cmc_curve(model,a,b)
+        
+def _get_test_data(val_or_test='test'):
+    with h5py.File('cuhk-03.h5','r') as ff:    
+        a = np.array([ff['a'][val_or_test][str(i)][0] for i in range(100)])
+        b = np.array([ff['b'][val_or_test][str(i)][0] for i in range(100)])
+        return a,b
 
 
 def train(model,weights_name='weights_on_cuhk03_0_0',train_num=40,one_epoch=150000,epoch_num=1,flag_random=False,flag_train=0,flag_val=1,which_val_data='validation',nb_val_samples=1000):
