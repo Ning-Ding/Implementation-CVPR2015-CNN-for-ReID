@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 07 17:04:05 2016
-
-@author: dingning
-"""
 import h5py
 import numpy as np
 from PIL import Image
