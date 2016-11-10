@@ -370,7 +370,7 @@ def _get_test_data(val_or_test='test'):
         return a,b
 
 
-def train(model,weights_name='weights_on_cuhk03_0_0',train_num=100,one_epoch=30000,epoch_num=1,flag_random=lambda x:x/2+0.4,random_pattern=None,flag_train=0,flag_val=1,which_val_data='validation',nb_val_samples=1000):
+def train(model,weights_name='weights_on_cuhk03_0_0',train_num=100,one_epoch=30000,epoch_num=1,flag_random=None,random_pattern=lambda x:x/2+0.4,flag_train=0,flag_val=1,which_val_data='validation',nb_val_samples=1000):
     with h5py.File('cuhk-03.h5','r') as f:
         Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         Rank1s = []
