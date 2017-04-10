@@ -1,4 +1,4 @@
-# Implementation-1
+# Implementation-CVPR2015-CNN-for-ReID
 
 Implementation for CVPR 2015 Paper: "An Improved Deep Learning Architecture for Person Re-Identification".
 
