@@ -1,9 +1,9 @@
 # Implementation-CVPR2015-CNN-for-ReID
-
-## `Notice`: 
-### Sorry for issues caused by the deprecated version of Keras and TensorFlow that I used for this project.
-### I will take a few days to update the code to make it easier to use and refactor.
-
+---
+### `Notice`:
+#### Sorry for issues caused by the deprecated version of Keras and TensorFlow that I used for this project.
+#### I will take a few days to update the code to make it easier to use and refactor.
+---
 Implementation for CVPR 2015 Paper: "An Improved Deep Learning Architecture for Person Re-Identification".
 
 [`Paper link`](http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Ahmed_An_Improved_Deep_2015_CVPR_paper.pdf)
