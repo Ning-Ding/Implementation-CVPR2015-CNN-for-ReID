@@ -87,7 +87,7 @@ def tf_model_definition(weight_decay=0.0005):
     y = FC_1(y)
     y_output = FC_2(y)
     
-    model = Model(input=[x1_input, x2_input],output=y)
+    model = Model(inputs=[x1_input, x2_input], outputs=y_output)
     model.summary()
     
     return model
