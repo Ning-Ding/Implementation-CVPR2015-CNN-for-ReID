@@ -12,7 +12,7 @@ Model Definition Script.
 from __future__ import absolute_import
 
 import tensorflow as tf
-from tensorflow.contrib.keras.python.keras.layers import Conv2D
+from tensorflow.contrib.keras.python.keras.layers.convolutional import Conv2D
 from tensorflow.contrib.keras.python.keras.layers.pooling import MaxPooling2D
 from tensorflow.contrib.keras.python.keras.regularizers import l2
 
