@@ -32,9 +32,17 @@ def tf_model_definition(weight_decay=0.0005):
     x2 = share_conv_2(x2)
     x1 = MaxPooling2D(x1)
     x2 = MaxPooling2D(x2)
-    upsample = UpSampling2D(size=(5, 5))
-    x1_up = upsample(x1)
-    x2_up = upsample(x2)
+    
+    upsample_same = UpSampling2D(size=(5, 5))
+    x1_up = upsample_same(x1)
+    x2_up = upsample_same(x2)
+    """
+    Wait for Implement.
+    upsample_neighbor = Lambda(function, output_shape=None, mask=None, arguments=None)
+    """
+    x1_nn = upsample_neighbor(x1)
+    x2_nn = upsample_neighbor(x2)
+    
     
     # a8 = merge([a7,b7],mode=cross_input_asym,output_shape=cross_input_shape)
     # b8 = merge([b7,a7],mode=cross_input_asym,output_shape=cross_input_shape)
