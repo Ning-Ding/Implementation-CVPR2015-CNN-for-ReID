@@ -40,6 +40,7 @@ def tf_model_definition(weight_decay=0.0005):
         return (input_shape[0],input_shape[1] * 5,input_shape[2] * 5,input_shape[3])
     
     max_pooling = MaxPool2D(2)
+    flatten = Flatten()
     
     x1_input = Input(shape=(160,60,3))
     x2_input = Input(shape=(160,60,3))
@@ -79,7 +80,7 @@ def tf_model_definition(weight_decay=0.0005):
     x2 = max_pooling(x2)
     
     y = tf.concat([x1, x2], -1)
-    y = Flatten(y)
+    y = flatten(y)
     
     FC_1 = Dense(500, kernel_regularizer=l2(weight_decay), activation='relu')
     FC_2 = Dense(2, kernel_regularizer=l2(weight_decay), activation='softmax')
