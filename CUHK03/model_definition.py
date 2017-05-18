@@ -59,7 +59,7 @@ def tf_model_definition(weight_decay=0.0005):
     upsample_same = UpSampling2D(size=(5, 5))
     x1_up = upsample_same(x1)
     x2_up = upsample_same(x2)    
-    upsample_neighbor = Lambda(upsample_neighbor_function, output_shape=upsample_neighbor_shape)        
+    upsample_neighbor = Lambda(upsample_neighbor_function)        
     x1_nn = upsample_neighbor(x1)
     x2_nn = upsample_neighbor(x2)
     
