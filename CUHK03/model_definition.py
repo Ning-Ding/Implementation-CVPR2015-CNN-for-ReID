@@ -25,8 +25,8 @@ def tf_model_definition(weight_decay=0.0005):
 
     def upsample_neighbor_function(input_tensor):
         input_tensor_pad = tf.pad(X,[[2,2],[2,2]])
-        x_length = 
-        y_length = 
+        x_length = tf.shape(X)[1]
+        y_length = tf.shape(X)[2]
         output_x_list = []
         output_y_list = []
         for i_x in range(2, x_length + 2):
