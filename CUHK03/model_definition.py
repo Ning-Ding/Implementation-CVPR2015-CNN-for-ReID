@@ -19,7 +19,7 @@ from tensorflow.contrib.keras.python.keras.layers.pooling import MaxPool2D
 from tensorflow.contrib.keras.python.keras.regularizers import l2
 from tensorflow.contrib.keras.python.keras.layers.core import Lambda,Flatten,Dense
 from tensorflow.contrib.keras.python.keras.engine.topology import Input
-
+from tensorflow.contrib.keras.python.keras.engine.training import Model
 
 def tf_model_definition(weight_decay=0.0005):
 
