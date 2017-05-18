@@ -12,9 +12,10 @@ Model Definition Script.
 from __future__ import absolute_import
 
 import tensorflow as tf
-from tensorflow.contrib.keras.python.keras.layers.convolutional import Conv2D
+from tensorflow.contrib.keras.python.keras.layers.convolutional import Conv2D,UpSampling2D
 from tensorflow.contrib.keras.python.keras.layers.pooling import MaxPooling2D
 from tensorflow.contrib.keras.python.keras.regularizers import l2
+from tensorflow.contrib.keras.python.keras.layers.core import Lambda
 
 
 def tf_model_definition(weight_decay=0.0005):
@@ -31,7 +32,10 @@ def tf_model_definition(weight_decay=0.0005):
     x2 = share_conv_2(x2)
     x1 = MaxPooling2D(x1)
     x2 = MaxPooling2D(x2)
-
+    upsample = UpSampling2D(size=(5, 5))
+    x1_up = upsample(x1)
+    x2_up = upsample(x2)
+    
     # a8 = merge([a7,b7],mode=cross_input_asym,output_shape=cross_input_shape)
     # b8 = merge([b7,a7],mode=cross_input_asym,output_shape=cross_input_shape)
     # a9 = Convolution2D(25,5,5, subsample=(5,5), dim_ordering='tf',activation='relu', W_regularizer=l2(l=weight_decay))(a8)
