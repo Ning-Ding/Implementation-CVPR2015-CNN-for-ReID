@@ -10,23 +10,44 @@
 Model Definition Script.
 """
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib.keras.python.keras.layers.convolutional import Conv2D,UpSampling2D
 from tensorflow.contrib.keras.python.keras.layers.pooling import MaxPooling2D
 from tensorflow.contrib.keras.python.keras.regularizers import l2
-from tensorflow.contrib.keras.python.keras.layers.core import Lambda
+from tensorflow.contrib.keras.python.keras.layers.core import Lambda,Flatten,Dense
+from tensorflow.contrib.keras.python.keras.engine.topology import Input
 
 
 def tf_model_definition(weight_decay=0.0005):
 
-    x1 = tf.placeholder(tf.float32, shape=(-1, 160, 60, 3), name="input_x1")
-    x2 = tf.placeholder(tf.float32, shape=(-1, 160, 60, 3), name="input_x2")
+    def upsample_neighbor_function(input_tensor):
+        input_tensor_pad = tf.pad(X,[[2,2],[2,2]])
+        x_length = 
+        y_length = 
+        output_x_list = []
+        output_y_list = []
+        for i_x in range(2, x_length + 2):
+            for i_y in range(2, y_length + 2):
+                output_y_list.append(input_tensor_pad[:,i_x-2:i_x+3,i_y-2:i_y+3,:])
+            output_x_list.append(tf.concat(output_y_list, axis=2))
+            output_y_list = []
+        return tf.concat(output_x_list, axis=1)
+    
+    def upsample_neighbor_shape(input_shape):
+        return (input_shape[0],input_shape[1] * 5,input_shape[2] * 5,input_shape[3])
+    
+    x1_input = Input(shape=(160,60,3))
+    x2_input = Input(shape=(160,60,3))
+    
     share_conv_1 = Conv2D(20, 5, kernel_regularizer=l2(weight_decay), activation="relu")
-    x1 = share_conv_1(x1)
-    x2 = share_conv_1(x2)
+    x1 = share_conv_1(x1_input)
+    x2 = share_conv_1(x2_input)
     x1 = MaxPooling2D(x1)
     x2 = MaxPooling2D(x2)
+    
     share_conv_2 = Conv2D(25, 5, kernel_regularizer=l2(weight_decay), activation="relu")
     x1 = share_conv_2(x1)
     x2 = share_conv_2(x2)
@@ -35,65 +56,42 @@ def tf_model_definition(weight_decay=0.0005):
     
     upsample_same = UpSampling2D(size=(5, 5))
     x1_up = upsample_same(x1)
-    x2_up = upsample_same(x2)
-    """
-    Wait for Implement.
-    upsample_neighbor = Lambda(function, output_shape=None, mask=None, arguments=None)
-    """
+    x2_up = upsample_same(x2)    
+    upsample_neighbor = Lambda(upsample_neighbor_function, output_shape=upsample_neighbor_shape)        
     x1_nn = upsample_neighbor(x1)
     x2_nn = upsample_neighbor(x2)
     
+    x1 = tf.add(x1_up, tf.negative(x2_nn))
+    x2 = tf.add(x2_up, tf.negative(x1_nn))    
     
-    # a8 = merge([a7,b7],mode=cross_input_asym,output_shape=cross_input_shape)
-    # b8 = merge([b7,a7],mode=cross_input_asym,output_shape=cross_input_shape)
-    # a9 = Convolution2D(25,5,5, subsample=(5,5), dim_ordering='tf',activation='relu', W_regularizer=l2(l=weight_decay))(a8)
-    # b9 = Convolution2D(25,5,5, subsample=(5,5), dim_ordering='tf',activation='relu', W_regularizer=l2(l=weight_decay))(b8)
-    # a10 = Convolution2D(25,3,3, subsample=(1,1), dim_ordering='tf',activation='relu', W_regularizer=l2(l=weight_decay))(a9)
-    # b10 = Convolution2D(25,3,3, subsample=(1,1), dim_ordering='tf',activation='relu', W_regularizer=l2(l=weight_decay))(b9)
-    # a11 = MaxPooling2D((2,2),dim_ordering='tf')(a10)
-    # b11 = MaxPooling2D((2,2),dim_ordering='tf')(b10)
-    # c1 = merge([a11, b11], mode='concat', concat_axis=-1)
-    # c2 = Flatten()(c1)
-    # c3 = Dense(500,activation='relu', W_regularizer=l2(l=weight_decay))(c2)
-    # c4 = Dense(2,activation='softmax', W_regularizer=l2(l=weight_decay))(c3)
+    conv_3_1 = Conv2D(25, 5, strides=(5, 5), kernel_regularizer=l2(weight_decay), activation="relu")
+    conv_3_2 = Conv2D(25, 5, strides=(5, 5), kernel_regularizer=l2(weight_decay), activation="relu")
+    x1 = conv_3_1(x1)
+    x2 = conv_3_2(x2)
     
-    # model = Model(input=[a1,b1],output=c4)
-    # model.summary()
+    conv_4_1 = Conv2D(25, 3, kernel_regularizer=l2(weight_decay), activation="relu")
+    conv_4_2 = Conv2D(25, 3, kernel_regularizer=l2(weight_decay), activation="relu")
+    x1 = conv_4_1(x1)
+    x2 = conv_4_2(x2)
+    x1 = MaxPooling2D(x1)
+    x2 = MaxPooling2D(x2)
     
-    # print 'model definition complete'
-    # return model
+    y = tf.concat([x1, x2], -1)
+    y = Flatten(y)
+    
+    FC_1 = Dense(500, kernel_regularizer=l2(weight_decay), activation='relu')
+    FC_2 = Dense(2, kernel_regularizer=l2(weight_decay), activation='softmax')
+    y = FC_1(y)
+    y_output = FC_2(y)
+    
+    model = Model(input=[x1_input, x2_input],output=y)
+    model.summary()
+    
+    return model
 
-    # '''  
-    # K._IMAGE_DIM_ORDERING = 'tf'    
-    # def concat_iterat(input_tensor):
-    #     input_expand = K.expand_dims(K.expand_dims(input_tensor, -2), -2)
-    #     x_axis = []
-    #     y_axis = []
-    #     for x_i in range(5):
-    #         for y_i in range(5):
-    #             y_axis.append(input_expand)
-    #         x_axis.append(K.concatenate(y_axis, axis=2))
-    #         y_axis = []
-    #     return K.concatenate(x_axis, axis=1)
-            
-    # def cross_input_asym(X):
-    #     tensor_left = X[0]
-    #     tensor_right = X[1]
-    #     x_length = K.int_shape(tensor_left)[1]
-    #     y_length = K.int_shape(tensor_left)[2]
-    #     cross_y = []
-    #     cross_x = []
-    #     tensor_left_padding = K.spatial_2d_padding(tensor_left,padding=(2,2))
-    #     tensor_right_padding = K.spatial_2d_padding(tensor_right,padding=(2,2))
-    #     for i_x in range(2, x_length + 2):
-    #         for i_y in range(2, y_length + 2):
-    #             cross_y.append(tensor_left_padding[:,i_x-2:i_x+3,i_y-2:i_y+3,:] 
-    #                          - concat_iterat(tensor_right_padding[:,i_x,i_y,:]))
-    #         cross_x.append(K.concatenate(cross_y,axis=2))
-    #         cross_y = []
-    #     cross_out = K.concatenate(cross_x,axis=1)
-    #     return K.abs(cross_out)
-        
-    # def cross_input_shape(input_shapes):
-    #     input_shape = input_shapes[0]
-    #     return (input_shape[0],input_shape[1] * 5,input_shape[2] * 5,input_shape[3])
+
+if __name__ == "__main__":
+    """
+    Just for Quickly Testing.
+    """
+    model = tf_model_definition()
