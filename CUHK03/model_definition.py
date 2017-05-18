@@ -24,7 +24,7 @@ from tensorflow.contrib.keras.python.keras.engine.topology import Input
 def tf_model_definition(weight_decay=0.0005):
 
     def upsample_neighbor_function(X):
-        input_tensor_pad = tf.pad(X,[[2,2],[2,2]])
+        input_tensor_pad = tf.pad(X,[[0,0],[2,2],[2,2],[0,0]])
         x_length = tf.shape(X)[1]
         y_length = tf.shape(X)[2]
         output_x_list = []
