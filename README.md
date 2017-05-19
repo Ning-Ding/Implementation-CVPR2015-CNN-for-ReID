@@ -4,6 +4,7 @@
 #### Code for CUHK03 has already been updated. It should be able to be trained now. More detail see the README.
 ### Test Environment:
 * Ubuntu 16.04
+* Python 2.7.12
 * TensorFlow 1.1
 * Keras 2.0
 * CUDA 8.0
@@ -11,8 +12,10 @@
 * NVIDIA GTX 1080Ti
 ---
 ### Things to do:
-* Add some comment to the code for CUHK03
-* Share the trained model to reproduce the test result with Baidu Drive or Google Drive. Though it may not get the result mentioned in the original paper.
+* Add some comment to the code for CUHK03.
+* Refactor the Data Preparation and Training Routine part of the code.
+* Show the Test Result Form.
+* Share the trained model to reproduce the test result with Baidu Drive or Google Drive.
 * Same to the code for Market-1501.
 ---
 Implementation for CVPR 2015 Paper: "An Improved Deep Learning Architecture for Person Re-Identification".
