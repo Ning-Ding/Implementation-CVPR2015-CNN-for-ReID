@@ -26,7 +26,7 @@ def parse_args():
 
     return args
 
-def make_hdf5_for_cuhk03(file_path):
+def create_dataset(file_path):
     
     with h5py.File(file_path,'r') as f, h5py.File('cuhk-03.h5') as fw:
 
@@ -89,7 +89,7 @@ def make_hdf5_for_cuhk03(file_path):
 if __name__ == '__main__':
     
     args = parse_args()
-    make_hdf5_for_cuhk03(args.mat_file_path)
+    create_dataset(args.mat_file_path)
 
 
 

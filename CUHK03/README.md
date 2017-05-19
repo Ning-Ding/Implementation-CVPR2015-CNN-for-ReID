@@ -4,15 +4,13 @@
 
 2. Find the .mat file named **`cuhk-03.mat`**.
 
-2. Find the script **`make_hdf5_for_cuhk03.py`**.
+2. Find the script **`create_dataset.py`**.
 
-4. Run the **`make_hdf5_for_cuhk03.py`** with the path of `cuhk-03.mat`
+4. Run the **`create_dataset.py`** with the path of `cuhk-03.mat`
 
 5. Get a hdf5 file named **`cuhk_03.h5`**.
 
-6. Move the **`model_for_cuhk03.py`** file to the same path with `cuhk-03.h5`.
-
-7. run the **`model_for_cuhk03.py`** (You'd better run this file through Ipython Environment)
+6. Run the **`main.py`** with the path of **`cuhk_03.h5`** file.
 
 ## The dataset HDF5 structure
 
