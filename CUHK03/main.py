@@ -9,6 +9,7 @@
 """
 Model Training and Evaluation Script.
 """
+import h5py
 import argparse
 from model import generate_model,compile_model
 from data_preparation import ImageDataGenerator_for_multiinput
