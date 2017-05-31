@@ -15,10 +15,13 @@ import h5py
 from PIL import Image
 from keras.preprocessing import image as pre_image
 
+#Reduce the batch size(ex: 50) if there is a resource exhaust error.
+BATCH_SIZE = 150
+
 class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
     
     def __init__(self, f, train_or_validation = 'train', flag = 1, image_data_generator = None,
-                 batch_size=150, shuffle=True, seed=1217):
+                 batch_size = BATCH_SIZE, shuffle=True, seed=1217):
         self.f = f
         self.length = len(f['a'][train_or_validation].keys())
         self.train_or_validation = train_or_validation
@@ -72,7 +75,7 @@ class NumpyArrayIterator_for_CUHK03(pre_image.Iterator):
 
 class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
             
-    def flow(self, f, train_or_validation = 'train', flag = 0, batch_size=150, shuffle=True, seed=1217):
+    def flow(self, f, train_or_validation = 'train', flag = 0, batch_size = BATCH_SIZE, shuffle=True, seed=1217):
         
         return NumpyArrayIterator_for_CUHK03(f, train_or_validation, flag, self, batch_size=batch_size, shuffle=shuffle, seed=seed)
 
