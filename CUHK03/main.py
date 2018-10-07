@@ -255,7 +255,7 @@ def train_input_fn():
                     )
 
     dataset = dataset.batch(batch_size=cfg.TRAIN.BATCHSIZE)
-    dataset = dataset.prefetch(buffer_size=10000)
+    dataset = dataset.prefetch(buffer_size=150)
     
     return dataset
 
@@ -269,7 +269,7 @@ def valid_input_fn():
           tf.TensorShape(None)))
 
     dataset = dataset.batch(100)
-    dataset = dataset.prefetch(buffer_size=1000)
+    dataset = dataset.prefetch(buffer_size=100)
 
     return dataset
 
