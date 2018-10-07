@@ -1,22 +1,29 @@
-# Implementation-CVPR2015-CNN-for-ReID
+## Implementation-CVPR2015-CNN-for-ReID
 ---
 ### `Notice`:
-#### Code for CUHK03 has already been updated. It should be able to be trained now. More detail see the README.
+#### Code for CUHK03 has already been updated.
+
 ### Test Environment:
-* Ubuntu 16.04
-* Python 2.7.12
-* TensorFlow 1.1
-* Keras 2.0
-* CUDA 8.0
-* cudnn 5.1
+* Ubuntu 18.04
+* Python 3.6.6
+* TensorFlow 1.11
+* Keras 2.1.6-tf
+* CUDA 9.0
+* cudnn 7.3.1
 * NVIDIA GTX 1080Ti
 ---
+
+### Working on:
+* Multi-GPU
+* TensorBoard
+* Estimator
+* CMC and mAP
+
 ### Things to do:
-* Add some comment to the code for CUHK03.
-* Refactor the Data Preparation and Training Routine part of the code.
 * Show the Test Result Form.
 * Share the trained model to reproduce the test result with Baidu Drive or Google Drive.
 * Same to the code for Market-1501.
+
 ---
 Implementation for CVPR 2015 Paper: "An Improved Deep Learning Architecture for Person Re-Identification".
 
@@ -25,10 +32,7 @@ Implementation for CVPR 2015 Paper: "An Improved Deep Learning Architecture for 
 This architechture is implemented based on `Keras` with `Tensorflow` backen using `Python` Programming Language.
 
 ## Train the model on which dataset?
-
-1. [`Market-1501`](https://github.com/Deep-Learning-Person-Re-Identification/Implementaion-1/tree/master/market1501)
-
-2. [`CUHK-03`](https://github.com/Deep-Learning-Person-Re-Identification/Implementaion-1/tree/master/CUHK03)
+1. [`CUHK-03`](https://github.com/Deep-Learning-Person-Re-Identification/Implementaion-1/tree/master/CUHK03)
 
 ## The model structure
 
