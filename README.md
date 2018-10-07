@@ -14,6 +14,7 @@
 ---
 
 ### Working on:
+* Image Augmentation Function
 * Multi-GPU
 * TensorBoard
 * Estimator
