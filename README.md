@@ -14,11 +14,11 @@
 ---
 
 ### Working on:
-* Image Augmentation Function
-* Multi-GPU
-* TensorBoard
-* Estimator
+* Use TensorFlow Low API to update the code
 * CMC and mAP
+* TensorBoard
+* Multi-GPU
+* Estimator
 
 ### Things to do:
 * Show the Test Result Form.
