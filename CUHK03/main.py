@@ -204,7 +204,6 @@ def _get_index_array(mode='train'):
     return index_array
 
 
-# soon
 def _image_augmentation(image):
     x_padding = int(np.round(image.shape[0] * 0.05))
     y_padding = int(np.round(image.shape[1] * 0.05))
@@ -334,8 +333,8 @@ def valid_input_fn():
           tf.TensorShape([*cfg.DATA.ARRAY_SIZE, 3])),
          tf.TensorShape(None)))
 
-    dataset = dataset.batch(100)
-    dataset = dataset.prefetch(buffer_size=100)
+    dataset = dataset.batch(200)
+    dataset = dataset.prefetch(buffer_size=200)
 
     return dataset
 
@@ -361,7 +360,7 @@ def prepare_keras_callback():
                 monitor='val_loss',
                 verbose=1,
                 mode='auto',
-                period=1000)
+                period=100)
     callbacks.append(callback_mcp)
 
     return callbacks
@@ -433,6 +432,3 @@ if __name__ == '__main__':
                         steps_per_epoch=100,
                         epochs=cfg.TRAIN.STEPS,
                         validation_steps=1)
-
-    # estimator = generate_model()
-    # estimator.train(steps=cfg.TRAIN.STEPS, input_fn=train_input_fn)
