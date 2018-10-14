@@ -30,7 +30,7 @@ __C.DATA.PATTERN.TRAIN = [1, 0, 0]
 __C.DATA.PATTERN.VALID = [1, 0]
 __C.TRAIN = EasyDict()
 __C.TRAIN.BATCHSIZE = 150
-__C.TRAIN.STEPS = 2100
+__C.TRAIN.STEPS = 2000
 __C.TRAIN.WEIGHT_DECAY = 0.00025
 __C.TRAIN.GPU_INDEX = 0
 __C.VALID = EasyDict()
@@ -225,6 +225,32 @@ def _image_augmentation(image):
     return new_image
 
 
+def _get_cmc_data():
+    view_a, view_b = [], []
+    with h5py.File(cfg.DATA.CREATED_FILE, 'r') as f:
+        index_array = _get_index_array('test')
+        for i in index_array:
+            x, y = np.random.choice(f[str(i)].shape[0], 2, replace=False)
+            view_a.append(f[str(i)][x])
+            view_b.append(f[str(i)][y])
+    return view_a, view_b
+
+
+def compute_cmc(model, rank=1):
+    view_a, view_b = _get_cmc_data()
+    view_b_array = np.array(view_b)
+    num = 0
+    for i, image in enumerate(view_a):
+        x = np.array([image] * 100)
+        result = model.predict_on_batch([x, view_b_array])
+        args = result[:,0].argsort()
+        args = args[::-1]
+        args = args[:rank]
+        if  i in args:
+            num += 1
+    return num / 100
+
+
 # -------------------------------------------------------
 # dataset creation section
 
@@ -320,7 +346,7 @@ def train_input_fn():
                     )
 
     dataset = dataset.batch(batch_size=cfg.TRAIN.BATCHSIZE)
-    dataset = dataset.prefetch(buffer_size=150)
+    dataset = dataset.prefetch(buffer_size=cfg.TRAIN.BATCHSIZE)
 
     return dataset
 
