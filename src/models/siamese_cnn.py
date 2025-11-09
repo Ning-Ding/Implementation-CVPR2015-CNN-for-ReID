@@ -134,11 +134,19 @@ class SiameseCNN(nn.Module):
 
         self.fc2 = nn.Linear(500, num_classes)
 
+        # ===== Embedding Projection for Contrastive Learning =====
+        # 用于从单张图像提取 embedding (跳过 pair-wise 操作)
+        # Input: flattened conv2 features (B, 25*37*12 = 11100)
+        # Output: (B, 500) embedding
+        self.embedding_projection = nn.Linear(25 * 37 * 12, 500)
+
         # Weight initialization for FC layers
         nn.init.kaiming_normal_(self.fc1.weight, mode='fan_out', nonlinearity='relu')
         nn.init.constant_(self.fc1.bias, 0)
         nn.init.normal_(self.fc2.weight, std=0.001)
         nn.init.constant_(self.fc2.bias, 0)
+        nn.init.kaiming_normal_(self.embedding_projection.weight, mode='fan_out', nonlinearity='relu')
+        nn.init.constant_(self.embedding_projection.bias, 0)
 
     def forward_once(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -200,7 +208,17 @@ class SiameseCNN(nn.Module):
 
     def get_embedding(self, x: torch.Tensor) -> torch.Tensor:
         """
-        提取单张图像的特征向量 (用于检索)
+        提取单张图像的特征向量 (用于 contrastive learning 和检索)
+
+        NOTE: 对于 contrastive learning，我们需要从单张图像提取 embedding。
+        原始架构设计用于处理图像对（需要 cross-input differences），
+        因此我们使用单分支路径：
+        1. Tied convolutions 提取特征 (conv1 + conv2)
+        2. Flatten 卷积特征
+        3. 通过 embedding_projection 层投影到 500 维
+
+        这种方法避免了 cross-input layer 的 pair-wise 依赖，
+        同时保持与 FC1 相同的输出维度。
 
         Args:
             x: (B, 3, H, W) 单张图像
@@ -208,18 +226,14 @@ class SiameseCNN(nn.Module):
         Returns:
             embedding: (B, 500) 特征向量
         """
-        # 通过 tied convolutions
+        # Step 1: Tied convolutions 提取特征
         feat = self.forward_once(x)  # (B, 25, 37, 12)
 
-        # 为了提取 embedding，我们需要一个参考图像
-        # 这里使用自身作为参考（实际使用时需要提供另一张图像或使用单分支模型）
-        cross, _ = self.cross_input(feat, feat.clone())
-        patch = self.patch_summary1(cross)
-        across = self.across_patch1(patch)
-        flattened = across.view(across.size(0), -1)
+        # Step 2: Flatten 卷积特征
+        flattened = feat.view(feat.size(0), -1)  # (B, 25*37*12) = (B, 11100)
 
-        # 通过 FC1 得到 embedding
-        embedding = self.fc1(flattened)
+        # Step 3: 投影到 500 维 embedding 空间
+        embedding = self.embedding_projection(flattened)  # (B, 500)
         embedding = self.relu_fc(embedding)
 
         return embedding
