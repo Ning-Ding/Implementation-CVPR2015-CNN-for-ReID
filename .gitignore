@@ -62,8 +62,8 @@ lightning_logs/
 runs/
 
 # Datasets
-data/
-datasets/
+/data/
+/datasets/
 *.hdf5
 *.h5
 *.mat
