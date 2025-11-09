@@ -123,7 +123,10 @@ class ReIDLightningModule(pl.LightningModule):
             # Contrastive loss 需要 embeddings
             emb1 = self.model.get_embedding(x1)
             emb2 = self.model.get_embedding(x2)
-            loss = self.loss_fn(emb1, emb2, labels.float())
+            # 修复: Dataset 返回 label=1 (same), 0 (different)
+            # 但 ContrastiveLoss 期望 label=0 (same), 1 (different)
+            # 需要反转标签: 1 - labels
+            loss = self.loss_fn(emb1, emb2, 1 - labels.float())
 
             self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
 
@@ -150,7 +153,8 @@ class ReIDLightningModule(pl.LightningModule):
         elif self.loss_type == "contrastive":
             emb1 = self.model.get_embedding(x1)
             emb2 = self.model.get_embedding(x2)
-            loss = self.loss_fn(emb1, emb2, labels.float())
+            # 修复: 反转标签以匹配 ContrastiveLoss 的约定
+            loss = self.loss_fn(emb1, emb2, 1 - labels.float())
 
             self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
@@ -189,7 +193,20 @@ class ReIDLightningModule(pl.LightningModule):
         # 创建学习率调度器
         if self.scheduler_name == "polynomial":
             power = self.scheduler_params.get("power", 0.75)
-            max_steps = self.trainer.max_epochs * len(self.trainer.datamodule.train_dataloader()) if hasattr(self.trainer, 'datamodule') else 10000
+
+            # 修复: 检查 datamodule 是否存在且不为 None
+            # 当使用 Trainer.fit(model, train_dataloaders=...) 时，datamodule 存在但为 None
+            if (hasattr(self.trainer, 'datamodule') and
+                self.trainer.datamodule is not None and
+                hasattr(self.trainer.datamodule, 'train_dataloader')):
+                try:
+                    num_batches = len(self.trainer.datamodule.train_dataloader())
+                    max_steps = self.trainer.max_epochs * num_batches
+                except (TypeError, AttributeError):
+                    max_steps = 10000
+            else:
+                # 回退到默认值
+                max_steps = 10000
 
             scheduler = PolynomialLR(
                 optimizer,

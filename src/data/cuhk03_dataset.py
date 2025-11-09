@@ -134,55 +134,58 @@ class CUHK03Dataset(BaseReIDDataset):
         - f['labeled'][0][i]: 第 i 个摄像头
         - f['labeled'][0][i][j][k]: 第 i 个摄像头第 k 个人的第 j 张图像
         """
-        with scipy.io.loadmat(str(self.original_file)) as mat_data:
-            with h5py.File(self.processed_file, "w") as hdf5_file:
-                labeled = mat_data[self.dataset_type]
+        # 修复: scipy.io.loadmat 返回普通字典，不支持 context manager
+        # 直接读取，不需要 with 语句
+        mat_data = scipy.io.loadmat(str(self.original_file))
 
-                person_id = 0
+        with h5py.File(self.processed_file, "w") as hdf5_file:
+            labeled = mat_data[self.dataset_type]
 
-                # 遍历摄像头 (0-2 包含 1360 个身份)
-                for camera_idx in range(3):
-                    camera_data = labeled[0][camera_idx]
-                    num_persons = camera_data[0].size
+            person_id = 0
 
-                    for person_idx in range(num_persons):
-                        images = []
+            # 遍历摄像头 (0-2 包含 1360 个身份)
+            for camera_idx in range(3):
+                camera_data = labeled[0][camera_idx]
+                num_persons = camera_data[0].size
 
-                        # 获取该人的所有图像 (最多10张)
-                        for img_idx in range(10):
-                            try:
-                                img_ref = camera_data[img_idx][person_idx]
-                                img_data = mat_data[img_ref]
+                for person_idx in range(num_persons):
+                    images = []
 
-                                if img_data.ndim == 3:
-                                    # 图像格式: (C, H, W) -> (H, W, C)
-                                    img = np.transpose(img_data, (1, 2, 0))
+                    # 获取该人的所有图像 (最多10张)
+                    for img_idx in range(10):
+                        try:
+                            img_ref = camera_data[img_idx][person_idx]
+                            img_data = mat_data[img_ref]
 
-                                    # Resize to standard size
-                                    img_pil = Image.fromarray(img.astype(np.uint8))
-                                    img_pil = img_pil.resize((60, 160), Image.BILINEAR)
+                            if img_data.ndim == 3:
+                                # 图像格式: (C, H, W) -> (H, W, C)
+                                img = np.transpose(img_data, (1, 2, 0))
 
-                                    # 转换为 float32 并归一化到 [0, 1]
-                                    img_array = np.array(img_pil, dtype=np.float32) / 255.0
+                                # Resize to standard size
+                                img_pil = Image.fromarray(img.astype(np.uint8))
+                                img_pil = img_pil.resize((60, 160), Image.BILINEAR)
 
-                                    images.append(img_array)
-                            except (IndexError, ValueError):
-                                # 某些人可能没有10张图像
-                                break
+                                # 转换为 float32 并归一化到 [0, 1]
+                                img_array = np.array(img_pil, dtype=np.float32) / 255.0
 
-                        if len(images) > 0:
-                            # 保存为 HDF5 dataset
-                            hdf5_file.create_dataset(
-                                str(person_id),
-                                data=np.array(images, dtype=np.float32),
-                                compression="gzip",
-                            )
-                            person_id += 1
+                                images.append(img_array)
+                        except (IndexError, ValueError):
+                            # 某些人可能没有10张图像
+                            break
 
-                            if person_id % 100 == 0:
-                                print(f"Processed {person_id} identities...")
+                    if len(images) > 0:
+                        # 保存为 HDF5 dataset
+                        hdf5_file.create_dataset(
+                            str(person_id),
+                            data=np.array(images, dtype=np.float32),
+                            compression="gzip",
+                        )
+                        person_id += 1
 
-                print(f"Dataset creation complete: {person_id} identities")
+                        if person_id % 100 == 0:
+                            print(f"Processed {person_id} identities...")
+
+            print(f"Dataset creation complete: {person_id} identities")
 
     def _create_index_file(self):
         """
