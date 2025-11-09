@@ -653,26 +653,28 @@ if query_cams is not None and gallery_cams is not None:
 ```
 
 **Root Cause**: Conceptual mismatch between "mark as invalid" vs "remove from ranking":
-- **Mark as invalid** (WRONG): Keep all gallery samples, mark same-camera as False → positions include invalid samples
-- **Remove from ranking** (CORRECT): Filter out same-camera samples before computing ranks → positions only include valid candidates
+- **Mark as invalid** (WRONG): Keep all gallery samples, mark same-person same-camera as False → positions include invalid samples
+- **Remove from ranking** (CORRECT): Filter out ONLY same-person AND same-camera samples → different-person same-camera kept as hard negatives
+
+**Key Insight**: Different people from the same camera are **valid hard negatives** and must be kept!
 
 **Impact Example**:
 ```
 Query (person=42, cam=1), sorted gallery:
-  Pos 0: person=42, cam=1  ← Same camera (invalid)
-  Pos 1: person=42, cam=1  ← Same camera (invalid)
-  Pos 2: person=17, cam=2  ← Different person
+  Pos 0: person=42, cam=1  ← Same person, same camera (REMOVE)
+  Pos 1: person=42, cam=1  ← Same person, same camera (REMOVE)
+  Pos 2: person=17, cam=1  ← Different person, same camera (KEEP as negative!)
   Pos 3: person=42, cam=2  ← VALID MATCH
 
 Before fix: First match at rank 3 → CMC[2] += 1
-After fix:  Filter to [person=17(cam2), person=42(cam2)]
+After fix:  Filter to [person=17(cam1), person=42(cam2)]
             First match at rank 1 → CMC[0] += 1  ✅
 ```
 
-**Fix**: Filter gallery to remove same-camera samples **before** computing matches:
+**Fix**: Filter gallery to remove **same-person AND same-camera** samples before computing matches:
 
 ```python
-# ✅ After (compute_cmc, lines 72-94):
+# ✅ After (compute_cmc, lines 82-94):
 indices = np.argsort(distmat, axis=1)
 
 cmc = np.zeros(topk)
@@ -685,10 +687,12 @@ for q_idx in range(num_q):
     g_ids = gallery_ids[order]
     g_cams = gallery_cams[order] if gallery_cams is not None else None
 
-    # ✅ REMOVE same-camera samples from ranking
+    # ✅ REMOVE ONLY same-person AND same-camera samples
+    # Keep different-person same-camera as valid hard negatives!
     if q_cam is not None and g_cams is not None:
-        keep = (g_cams != q_cam)
-        g_ids = g_ids[keep]  # Filtered gallery!
+        keep = ~((g_ids == q_id) & (g_cams == q_cam))
+        g_ids = g_ids[keep]  # Filtered gallery
+        g_cams = g_cams[keep]  # Also filter camera array
 
     # Find first match in filtered gallery
     matches = (g_ids == q_id)
@@ -711,12 +715,14 @@ for q_idx in range(num_q):
 - ⚠️ **Breaking change**: Metric values increase (~10-15 pp)
 
 **Aligned with standard protocols**:
-- Market1501 (Zheng et al., ICCV 2015): "Gallery images from same camera as query are excluded"
-- CUHK03 (Li et al., CVPR 2014): "Same identity from same camera are removed from gallery"
-- DukeMTMC (Ristani et al., CVPR 2016): "Same-camera detections are excluded during evaluation"
+- Market1501 (Zheng et al., ICCV 2015): "For each identity, **same-camera** images are excluded" (same identity implied)
+- CUHK03 (Li et al., CVPR 2014): "**Same identity** from **same camera** are removed from gallery" (explicit: both conditions)
+- DukeMTMC (Ristani et al., CVPR 2016): "**Same-camera detections** [of same identity] are excluded" (same identity implied)
 
 **Documentation**: `docs/BUG_FIX_SAME_CAMERA_RANKING_BIAS.md`
-**Commit**: `fb22aa3` 🐛 修复 CMC/mAP 同摄像头匹配未从排名中移除导致指标低估
+**Commits**:
+- `fb22aa3` 🐛 修复 CMC/mAP 同摄像头匹配未从排名中移除导致指标低估 (initial fix)
+- `0f7d8ad` 🐛 修复过度过滤：仅移除同人同摄像头样本，保留不同人同摄像头作为有效负样本 (corrected)
 
 ---
 
@@ -763,7 +769,8 @@ docs/BUG_FIX_SAME_CAMERA_RANKING_BIAS.md          | +768  (Bug 14 documentation)
 ## Git Commit History | Git 提交历史
 
 ```bash
-fb22aa3  🐛 修复 CMC/mAP 同摄像头匹配未从排名中移除导致指标低估  (Bug 14)
+0f7d8ad  🐛 修复过度过滤：仅移除同人同摄像头样本，保留不同人同摄像头作为有效负样本  (Bug 14 correction)
+fb22aa3  🐛 修复 CMC/mAP 同摄像头匹配未从排名中移除导致指标低估  (Bug 14 initial)
 a7fcb8b  🐛 修复 CUHK03Dataset._load_image 桩实现导致回退路径崩溃  (Bug 13)
 d806f8e  🐛 修复 Triplet Loss 使用错误的调用签名      (Bug 12)
 c962603  🐛 修复 PolynomialLR 调度器忽略 max_steps 参数  (Bug 11)
