@@ -1,0 +1,105 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# UV package manager
+.uv/
+uv.lock
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+jupyter_checkpoints/
+
+# PyTorch
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# TensorBoard & Wandb
+logs/
+tensorboard_logs/
+wandb/
+lightning_logs/
+runs/
+
+# Datasets
+/data/
+/datasets/
+*.hdf5
+*.h5
+*.mat
+*.pkl
+*.pickle
+
+# Model outputs
+checkpoints/
+outputs/
+results/
+experiments/
+*.png
+*.jpg
+*.jpeg
+!docs/assets/*.png
+!docs/assets/*.jpg
+!legacy/model.png
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Documentation
+docs/_build/
+site/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+.cache/

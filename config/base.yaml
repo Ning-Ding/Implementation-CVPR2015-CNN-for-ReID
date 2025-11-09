@@ -1,0 +1,170 @@
+# Base Configuration for Person Re-Identification
+# 人员重识别基础配置
+
+# Model Configuration / 模型配置
+model:
+  name: "siamese_cnn"  # Options: siamese_cnn, siamese_resnet, attention_reid
+  architecture: "original"  # original (CVPR2015 paper), resnet50, resnet101
+
+  # Siamese CNN settings
+  input_size: [160, 60]  # [height, width]
+  input_channels: 3
+
+  # Cross-input neighborhood difference settings
+  cross_input:
+    neighborhood_size: 5
+    use_upsampling: true
+
+  # Feature dimensions
+  feature_dim: 500
+  num_classes: 2  # binary classification: same person or not
+
+# Loss Function / 损失函数
+loss:
+  type: "contrastive"  # Options: cross_entropy, contrastive, triplet
+
+  contrastive:
+    margin: 2.0
+
+  triplet:
+    margin: 0.3
+    mining: "hard"  # Options: all, hard, semi_hard
+
+  cross_entropy:
+    label_smoothing: 0.0
+
+# Optimizer Configuration / 优化器配置
+optimizer:
+  name: "sgd"  # Options: sgd, adam, adamw
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.00025
+  nesterov: true
+
+# Learning Rate Scheduler / 学习率调度
+scheduler:
+  name: "polynomial"  # Options: polynomial, step, cosine, exponential
+
+  polynomial:
+    power: 0.75
+
+  step:
+    step_size: 500
+    gamma: 0.1
+
+  cosine:
+    T_max: 2000
+    eta_min: 0.00001
+
+# Training Configuration / 训练配置
+training:
+  max_epochs: 2000
+  batch_size: 150
+  num_workers: 4
+
+  # Gradient clipping
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: "norm"
+
+  # Precision
+  precision: "32"  # Options: 32, 16-mixed, bf16-mixed
+
+  # Validation
+  val_check_interval: 100  # epochs
+
+  # Checkpointing
+  save_top_k: 3
+  monitor: "val_loss"
+  mode: "min"
+
+  # Early stopping
+  early_stopping:
+    enabled: false
+    patience: 50
+    min_delta: 0.001
+
+# Data Configuration / 数据配置
+data:
+  # Data augmentation / 数据增强
+  augmentation:
+    enabled: true
+    horizontal_flip: 0.5
+    shift_limit: 0.05
+    scale_limit: 0.05
+    rotate_limit: 5
+    brightness_contrast: 0.3
+
+  # Normalization (ImageNet stats)
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+
+  # Pair generation strategy
+  pair_generation:
+    positive_negative_ratio: [1, 2]  # [positive, negative] pattern
+    random_seed: 42
+
+# Evaluation Configuration / 评估配置
+evaluation:
+  metrics:
+    - "cmc"
+    - "map"
+
+  cmc_topk: [1, 5, 10, 20, 50]
+
+  # Distance metric
+  distance_metric: "euclidean"  # Options: euclidean, cosine
+
+  # Re-ranking
+  rerank:
+    enabled: false
+    k1: 20
+    k2: 6
+    lambda_value: 0.3
+
+# Logging Configuration / 日志配置
+logging:
+  # Console logging
+  console_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+
+  # File logging
+  file_logging: true
+  log_dir: "logs"
+
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "tensorboard_logs"
+
+  # Weights & Biases
+  wandb:
+    enabled: false
+    project: "cvpr2015-reid"
+    entity: null
+    name: null  # Auto-generated if null
+
+  # Log interval
+  log_every_n_steps: 10
+
+# Experiment Configuration / 实验配置
+experiment:
+  name: "base_experiment"
+  seed: 42
+  deterministic: true
+
+  # Output directories
+  output_dir: "outputs"
+  checkpoint_dir: "checkpoints"
+
+  # Device
+  accelerator: "auto"  # auto, cpu, gpu, tpu
+  devices: 1
+
+  # Reproducibility
+  benchmark: false  # Set to true for faster training if input sizes are constant
+
+# Paths / 路径配置
+paths:
+  data_root: "data"
+  results_dir: "results"
+  pretrained_models: "pretrained"
