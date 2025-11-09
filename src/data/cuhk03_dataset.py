@@ -114,8 +114,10 @@ class CUHK03Dataset(BaseReIDDataset):
         for person_id in self.identity_indices:
             if str(person_id) in self.data_file:
                 num_imgs = self.data_file[str(person_id)].shape[0]
-                # 存储 (person_id, image_index) 元组
-                self.identity_to_images[person_id] = list(range(num_imgs))
+                # 存储 (person_id, image_index) 元组，以便 _load_image 可以正确解析
+                self.identity_to_images[person_id] = [
+                    (person_id, img_idx) for img_idx in range(num_imgs)
+                ]
                 self.num_images += num_imgs
 
         self.num_identities = len(self.identity_indices)
@@ -216,19 +218,18 @@ class CUHK03Dataset(BaseReIDDataset):
 
         print(f"Index file created: train={len(train_indices)}, val={len(val_indices)}, test={len(test_indices)}")
 
-    def _load_image(self, image_id: int) -> np.ndarray:
+    def _load_image(self, image_id: Tuple[int, int]) -> np.ndarray:
         """
         加载图像
 
         Args:
-            image_id: 图像索引（在该 identity 的图像列表中的索引）
+            image_id: (person_id, image_index) 元组
 
         Returns:
-            image: (H, W, C) NumPy 数组, RGB格式, float32, [0, 1]
+            image: (H, W, C) NumPy 数组, RGB格式, uint8, [0, 255]
         """
-        # image_id 实际上是当前迭代中的 person_id
-        # 我们需要重新设计这个逻辑
-        pass
+        person_id, img_idx = image_id
+        return self._load_image_by_person_and_index(person_id, img_idx)
 
     def _get_single_item(self, index: int) -> Tuple[np.ndarray, int]:
         """
@@ -271,13 +272,14 @@ class CUHK03Dataset(BaseReIDDataset):
 
     def _get_positive_pair(self, person_id: int) -> Tuple[np.ndarray, np.ndarray]:
         """获取正样本对（同一人的两张图像）"""
-        images_indices = self.identity_to_images[person_id]
-        if len(images_indices) < 2:
+        image_tuples = self.identity_to_images[person_id]
+        if len(image_tuples) < 2:
             raise ValueError(f"Person {person_id} has less than 2 images")
 
-        idx1, idx2 = np.random.choice(len(images_indices), 2, replace=False)
-        image1 = self._load_image_by_person_and_index(person_id, idx1)
-        image2 = self._load_image_by_person_and_index(person_id, idx2)
+        # 随机选择两个不同的图像元组
+        idx1, idx2 = np.random.choice(len(image_tuples), 2, replace=False)
+        image1 = self._load_image(image_tuples[idx1])
+        image2 = self._load_image(image_tuples[idx2])
 
         return image1, image2
 
@@ -288,12 +290,12 @@ class CUHK03Dataset(BaseReIDDataset):
             [pid for pid in self.identity_indices if pid != person_id]
         )
 
-        # 各选一张图像
-        idx1 = np.random.choice(self.identity_to_images[person_id])
-        idx2 = np.random.choice(self.identity_to_images[other_id])
+        # 各选一张图像元组
+        image_tuple1 = np.random.choice(self.identity_to_images[person_id])
+        image_tuple2 = np.random.choice(self.identity_to_images[other_id])
 
-        image1 = self._load_image_by_person_and_index(person_id, idx1)
-        image2 = self._load_image_by_person_and_index(other_id, idx2)
+        image1 = self._load_image(image_tuple1)
+        image2 = self._load_image(image_tuple2)
 
         return image1, image2
 
