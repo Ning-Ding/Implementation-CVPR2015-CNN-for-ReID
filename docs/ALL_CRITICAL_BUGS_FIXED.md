@@ -753,7 +753,7 @@ else:
 - Confusing error message ("not implemented" when it IS implemented)
 - Import suggests support but actual instantiation missing
 
-**Fix**: Add explicit `elif` branch for Market1501Dataset:
+**Fix (Initial)**: Add explicit `elif` branch for Market1501Dataset:
 
 ```python
 # ✅ After (lines 105-143):
@@ -785,16 +785,45 @@ else:
     )
 ```
 
+**Additional Issue Discovered**: The initial fix used `mode="val"` for Market1501 validation dataset, but Market1501Dataset only accepts `"train"`, `"query"`, or `"gallery"` modes.
+
+**Follow-up Fix**: Changed validation mode from `mode="val"` to `mode="query"`:
+
+```python
+# ✅ Corrected Market1501 validation mode (line 136):
+elif dataset_name == "market1501":
+    train_dataset = Market1501Dataset(
+        root=config["paths"]["data_root"],
+        mode="train",
+        transform=train_transform,
+        return_pairs=True,
+    )
+
+    # Market1501 uses "query" for validation instead of "val"
+    val_dataset = Market1501Dataset(
+        root=config["paths"]["data_root"],
+        mode="query",  # ✅ Use "query" (Market1501 doesn't support "val")
+        transform=val_transform,
+        return_pairs=True,
+    )
+```
+
+**Dataset Mode Differences**:
+- **CUHK03**: Uses standard train/val/test split → `mode="val"` supported ✅
+- **Market1501**: Uses ReID-specific query/gallery split → `mode="val"` raises ValueError ❌, `mode="query"` correct ✅
+
 **Key changes**:
 1. ✅ Hoisted transform creation (DRY principle)
 2. ✅ Added `elif dataset_name == "market1501":` branch
-3. ✅ Market1501Dataset properly instantiated
+3. ✅ Market1501Dataset properly instantiated with correct modes
 4. ✅ Error message now lists supported datasets
+5. ✅ Validation mode uses dataset-specific conventions
 
 **Impact**:
 - Market1501 now usable through training CLI ✅
-- Both CUHK03 and Market1501 supported ✅
+- Both CUHK03 and Market1501 supported with correct modes ✅
 - Clear error message for unsupported datasets ✅
+- Respects dataset-specific evaluation protocols ✅
 
 **Usage**:
 ```bash
@@ -803,7 +832,9 @@ python -m src.scripts.train --config config/market1501.yaml
 ```
 
 **Documentation**: `docs/BUG_FIX_MARKET1501_CLI_NOT_SUPPORTED.md`
-**Commit**: `3f0bbd8` 🐛 修复训练 CLI 不支持 Market1501 数据集配置
+**Commits**:
+- `3f0bbd8` 🐛 修复训练 CLI 不支持 Market1501 数据集配置 (initial fix)
+- `d50eb46` 🐛 修复 Market1501 验证集使用不支持的 mode='val' (mode correction)
 
 ---
 
@@ -851,7 +882,8 @@ docs/BUG_FIX_MARKET1501_CLI_NOT_SUPPORTED.md      | +594  (Bug 15 documentation)
 ## Git Commit History | Git 提交历史
 
 ```bash
-3f0bbd8  🐛 修复训练 CLI 不支持 Market1501 数据集配置  (Bug 15)
+d50eb46  🐛 修复 Market1501 验证集使用不支持的 mode='val'  (Bug 15 mode correction)
+3f0bbd8  🐛 修复训练 CLI 不支持 Market1501 数据集配置  (Bug 15 initial)
 0f7d8ad  🐛 修复过度过滤：仅移除同人同摄像头样本，保留不同人同摄像头作为有效负样本  (Bug 14 correction)
 fb22aa3  🐛 修复 CMC/mAP 同摄像头匹配未从排名中移除导致指标低估  (Bug 14 initial)
 a7fcb8b  🐛 修复 CUHK03Dataset._load_image 桩实现导致回退路径崩溃  (Bug 13)
