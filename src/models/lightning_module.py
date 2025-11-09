@@ -332,7 +332,7 @@ class PolynomialLR(LRScheduler):
             return [base_lr for base_lr in self.base_lrs]
 
         gamma = self.last_epoch / self.max_steps
-        return [base_lr * ((1 + 0.0001 * self.last_epoch) ** (-self.power)) for base_lr in self.base_lrs]
+        return [base_lr * ((1 + gamma) ** (-self.power)) for base_lr in self.base_lrs]
 
 
 if __name__ == "__main__":
