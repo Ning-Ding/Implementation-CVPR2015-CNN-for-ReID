@@ -79,11 +79,13 @@ def compute_cmc(
         g_ids = gallery_ids[order]
         g_cams = gallery_cams[order] if gallery_cams is not None else None
 
-        # 移除同一摄像头的匹配（标准 ReID 评估协议）
+        # 移除同一人且同一摄像头的样本（标准 ReID 评估协议）
+        # 注意：不同人但同一摄像头的样本必须保留作为有效的负样本
         if q_cam is not None and g_cams is not None:
-            # 过滤掉同一摄像头的样本
-            keep = (g_cams != q_cam)
+            # 仅过滤掉同时满足：相同person_id AND 相同camera的样本
+            keep = ~((g_ids == q_id) & (g_cams == q_cam))
             g_ids = g_ids[keep]
+            g_cams = g_cams[keep]  # 同步过滤camera数组
 
         # 找到第一个匹配的位置
         matches = (g_ids == q_id)
@@ -130,11 +132,13 @@ def compute_map(
         g_ids = gallery_ids[order]
         g_cams = gallery_cams[order] if gallery_cams is not None else None
 
-        # 移除同一摄像头的样本（标准 ReID 评估协议）
+        # 移除同一人且同一摄像头的样本（标准 ReID 评估协议）
+        # 注意：不同人但同一摄像头的样本必须保留作为有效的负样本
         if q_cam is not None and g_cams is not None:
-            # 过滤掉同一摄像头的样本
-            keep = (g_cams != q_cam)
+            # 仅过滤掉同时满足：相同person_id AND 相同camera的样本
+            keep = ~((g_ids == q_id) & (g_cams == q_cam))
             g_ids = g_ids[keep]
+            g_cams = g_cams[keep]  # 同步过滤camera数组
 
         # Ground truth: 同一人的图像
         valid = (g_ids == q_id)

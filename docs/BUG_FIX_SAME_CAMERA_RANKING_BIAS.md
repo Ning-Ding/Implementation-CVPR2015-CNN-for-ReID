@@ -113,17 +113,18 @@ Query 1 (person_id=42, cam=1):
   CMC contribution: CMC[3:] += 1
 ```
 
-**After fix** (same-camera matches removed):
+**After fix** (same-person AND same-camera samples removed):
 ```
 Query 1 (person_id=42, cam=1):
-  Filtered gallery (camera != 1):
-    Pos 0: id=17, cam=2, dist=0.3
-    Pos 1: id=42, cam=2, dist=0.4  ← VALID MATCH (first true match)
-    Pos 2: id=42, cam=3, dist=0.5  ← Valid match
+  Filtered gallery (NOT (id==42 AND cam==1)):
+    Pos 0: id=17, cam=2, dist=0.3     ← Different person, kept as negative
+    Pos 1: id=19, cam=1, dist=0.35    ← Different person, SAME camera (kept!)
+    Pos 2: id=42, cam=2, dist=0.4     ← VALID MATCH (first true match)
+    Pos 3: id=42, cam=3, dist=0.5     ← Valid match
     ...
 
-  First match: position 1
-  CMC contribution: CMC[1:] += 1
+  First match: position 2
+  CMC contribution: CMC[2:] += 1
 ```
 
 **CMC improvement**:
@@ -251,16 +252,18 @@ cumsum = np.cumsum(relevance)
 precision_at_k = cumsum / (np.arange(len(relevance)) + 1)  # ❌ Denominator includes same-camera positions
 ```
 
-**After** (lines 133-150):
+**After** (lines 135-150):
 ```python
 order = indices[q_idx]
 g_ids = gallery_ids[order]
 g_cams = gallery_cams[order] if gallery_cams is not None else None
 
-# ✅ REMOVE same-camera samples from ranking
+# ✅ REMOVE same-person AND same-camera samples from ranking
+# Keep different-person same-camera samples as valid negatives!
 if q_cam is not None and g_cams is not None:
-    keep = (g_cams != q_cam)
+    keep = ~((g_ids == q_id) & (g_cams == q_cam))
     g_ids = g_ids[keep]  # ✅ Filtered gallery!
+    g_cams = g_cams[keep]  # ✅ Also filter camera array
 
 # Ground truth
 valid = (g_ids == q_id)
@@ -282,12 +285,14 @@ precision_at_k = cumsum / (np.arange(len(relevance)) + 1)  # ✅ Denominator onl
 
 ### Solution Overview
 
-**Strategy**: Filter the gallery to remove same-camera samples **before** computing matches.
+**Strategy**: Filter the gallery to remove **same-person AND same-camera samples** before computing matches.
+
+**Key insight**: Different people from the same camera are **valid hard negatives** and must be kept!
 
 **Implementation**:
 1. For each query, get sorted gallery indices
 2. Extract corresponding gallery IDs and camera IDs
-3. **Filter**: Keep only gallery samples from different cameras
+3. **Filter**: Remove only samples where (person_id == query_id AND camera == query_camera)
 4. Compute matches/relevance on the **filtered gallery**
 5. Compute ranks on the **filtered gallery**
 
@@ -301,17 +306,18 @@ precision_at_k = cumsum / (np.arange(len(relevance)) + 1)  # ✅ Denominator onl
 **Changes**:
 - Removed vectorized approach (which prevented per-query filtering)
 - Added per-query loop to allow individual filtering
-- Added gallery filtering: `keep = (g_cams != q_cam)` then `g_ids = g_ids[keep]`
+- Added gallery filtering: `keep = ~((g_ids == q_id) & (g_cams == q_cam))` to remove only same-person same-camera samples
 - Compute matches on filtered `g_ids`
-- Comments updated to reflect "移除同一摄像头的匹配（标准 ReID 评估协议）"
+- Comments updated to clarify we keep different-person same-camera as valid negatives
 
 **New logic flow**:
 ```python
 for each query:
     1. Get sorted gallery for this query
-    2. Filter out same-camera samples
-    3. Find first match in filtered gallery
-    4. Update CMC curve
+    2. Filter out ONLY same-person AND same-camera samples
+    3. Keep different-person same-camera as hard negatives
+    4. Find first match in filtered gallery
+    5. Update CMC curve
 ```
 
 #### Change 2: compute_map - Add Filtering Step
@@ -323,20 +329,22 @@ for each query:
 - Added filtering step before computing `valid`:
   ```python
   if q_cam is not None and g_cams is not None:
-      keep = (g_cams != q_cam)
+      keep = ~((g_ids == q_id) & (g_cams == q_cam))
       g_ids = g_ids[keep]
+      g_cams = g_cams[keep]
   ```
 - Changed `valid` computation from `(g_ids == q_id) & (g_cams != q_cam)` to just `(g_ids == q_id)`
-  - Why: Camera filtering already done, no need to check again
-- Comments updated to reflect filtering strategy
+  - Why: Only same-person same-camera filtering done, no need to check camera again
+- Comments clarify we keep different-person same-camera as valid negatives
 
 **New logic flow**:
 ```python
 for each query:
     1. Get sorted gallery for this query
-    2. Filter out same-camera samples
-    3. Compute relevance (same person) on filtered gallery
-    4. Compute AP from precision curve
+    2. Filter out ONLY same-person AND same-camera samples
+    3. Keep different-person same-camera as hard negatives
+    4. Compute relevance (same person) on filtered gallery
+    5. Compute AP from precision curve
 ```
 
 ---
@@ -347,26 +355,29 @@ for each query:
 
 ```python
 def test_cmc_same_camera_filtering():
-    """Verify that same-camera matches are excluded from ranking"""
+    """Verify that ONLY same-person same-camera samples are excluded"""
     # Setup
-    distmat = np.array([[0.1, 0.2, 0.3, 0.4, 0.5]])  # 1 query, 5 gallery
+    distmat = np.array([[0.1, 0.2, 0.25, 0.3, 0.4, 0.5]])  # 1 query, 6 gallery
     query_ids = np.array([42])
-    gallery_ids = np.array([42, 42, 17, 42, 19])  # 3 matches for person 42
+    gallery_ids = np.array([42, 42, 17, 19, 42, 42])  # 4 matches for person 42
     query_cams = np.array([1])
-    gallery_cams = np.array([1, 1, 2, 2, 3])  # First 2 are same camera
+    gallery_cams = np.array([1, 1, 1, 1, 2, 3])  # First 4 are same camera
 
     # Expected behavior:
-    # Sorted by distance: [42(cam1), 42(cam1), 17(cam2), 42(cam2), 19(cam3)]
-    # After filtering: [17(cam2), 42(cam2), 19(cam3)]
-    # First match: position 1 (second in filtered list)
+    # Sorted by distance: [42(cam1), 42(cam1), 17(cam1), 19(cam1), 42(cam2), 42(cam3)]
+    # Filter removes ONLY person==42 AND camera==1: removes positions 0, 1
+    # Keeps person 17(cam1) and 19(cam1) as valid hard negatives!
+    # After filtering: [17(cam1), 19(cam1), 42(cam2), 42(cam3)]
+    # First match: position 2 (third in filtered list)
 
-    cmc = compute_cmc(distmat, query_ids, gallery_ids, query_cams, gallery_cams, topk=5)
+    cmc = compute_cmc(distmat, query_ids, gallery_ids, query_cams, gallery_cams, topk=6)
 
-    # Before fix: first match at position 3 (counting same-camera)
-    # After fix: first match at position 1 (after filtering)
-    assert cmc[0] == 0.0  # Rank-1: no match
-    assert cmc[1] == 1.0  # Rank-2: first match
-    assert cmc[2] == 1.0  # Rank-3+: match found
+    # Before fix (removed ALL cam1): first match at position 0 (wrong - inflated!)
+    # After fix (only remove 42+cam1): first match at position 2 (correct!)
+    assert cmc[0] == 0.0  # Rank-1: person 17 (no match)
+    assert cmc[1] == 0.0  # Rank-2: person 19 (no match)
+    assert cmc[2] == 1.0  # Rank-3: person 42 (first match)
+    assert cmc[3] == 1.0  # Rank-4+: match found
 ```
 
 ### Unit Test: mAP with Same-Camera Filtering
