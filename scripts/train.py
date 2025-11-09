@@ -14,6 +14,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
+from omegaconf import OmegaConf
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -21,6 +22,65 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data import CUHK03Dataset, Market1501Dataset, create_transforms_from_config
 from src.models import create_siamese_cnn, ReIDLightningModule
 from src.utils.logger import setup_logger
+
+
+def load_config(config_path: str) -> dict:
+    """
+    加载配置文件，支持 Hydra 风格的继承
+    Load config file with Hydra-style inheritance support
+
+    Args:
+        config_path: 配置文件路径
+
+    Returns:
+        完整的配置字典（已合并继承）
+    """
+    config_path = Path(config_path)
+
+    # 使用 OmegaConf 加载配置
+    cfg = OmegaConf.load(config_path)
+
+    # 检查是否有 defaults 继承
+    if "defaults" in cfg:
+        defaults = cfg.defaults
+        base_configs = []
+
+        # 加载所有基础配置
+        for default in defaults:
+            if isinstance(default, str):
+                # 简单的字符串引用，如 "base"
+                base_name = default
+            elif isinstance(default, dict):
+                # 字典格式，提取第一个键
+                base_name = list(default.keys())[0]
+            else:
+                continue
+
+            # 构建基础配置文件路径
+            base_path = config_path.parent / f"{base_name}.yaml"
+            if base_path.exists():
+                base_cfg = OmegaConf.load(base_path)
+                base_configs.append(base_cfg)
+
+        # 合并配置：base -> child (child 覆盖 base)
+        if base_configs:
+            # 从最底层开始合并
+            merged = base_configs[0]
+            for base_cfg in base_configs[1:]:
+                merged = OmegaConf.merge(merged, base_cfg)
+            # 最后合并当前配置（覆盖基础配置）
+            merged = OmegaConf.merge(merged, cfg)
+            cfg = merged
+
+    # 删除 defaults 键（不需要在运行时使用）
+    if "defaults" in cfg:
+        cfg = OmegaConf.to_container(cfg, resolve=True)
+        if isinstance(cfg, dict):
+            cfg.pop("defaults", None)
+    else:
+        cfg = OmegaConf.to_container(cfg, resolve=True)
+
+    return cfg
 
 
 def parse_args():
@@ -34,9 +94,9 @@ def parse_args():
 def main():
     args = parse_args()
 
-    # Load config
-    with open(args.config) as f:
-        config = yaml.safe_load(f)
+    # Load config with inheritance support
+    # 修复: 使用 OmegaConf 加载配置，支持 Hydra 风格的 defaults 继承
+    config = load_config(args.config)
 
     # Setup logger
     logger = setup_logger("train", log_file="logs/train.log")
