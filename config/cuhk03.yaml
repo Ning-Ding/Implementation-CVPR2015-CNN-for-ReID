@@ -1,0 +1,57 @@
+# CUHK03 Dataset Configuration
+# CUHK03 数据集配置
+
+# Inherit from base config
+defaults:
+  - base
+
+# Override experiment name
+experiment:
+  name: "cuhk03_siamese_cnn"
+
+# Dataset specific settings
+dataset:
+  name: "cuhk03"
+  type: "labeled"  # Options: labeled, detected
+
+  # File paths
+  original_file: "cuhk-03.mat"
+  processed_file: "cuhk-03.hdf5"
+  index_file: "cuhk-03-index.hdf5"
+
+  # Dataset splits
+  split:
+    train_ids: 1260
+    val_ids: 100
+    test_ids: 100
+
+  # Image settings
+  image_size: [160, 60]  # [height, width]
+
+  # Data loading
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+
+# Model configuration (CUHK03 specific)
+model:
+  input_size: [160, 60]
+
+# Training configuration
+training:
+  batch_size: 150
+  max_epochs: 2000
+
+  # Pattern: [1 positive, 2 negatives]
+  positive_negative_pattern: [1, 0, 0]
+
+  # Validation
+  val_batch_size: 200
+  val_pattern: [1, 0]
+
+# Paths
+paths:
+  data_root: "data/cuhk03"
+  raw_data: "data/cuhk03/cuhk-03.mat"
+  processed_data: "data/cuhk03/processed"
+  results_dir: "results/cuhk03"

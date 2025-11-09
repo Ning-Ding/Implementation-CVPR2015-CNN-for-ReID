@@ -1,0 +1,80 @@
+# Market-1501 Dataset Configuration
+# Market-1501 数据集配置
+
+# Inherit from base config
+defaults:
+  - base
+
+# Override experiment name
+experiment:
+  name: "market1501_siamese_cnn"
+
+# Dataset specific settings
+dataset:
+  name: "market1501"
+
+  # Directory structure
+  dirs:
+    bounding_box_train: "bounding_box_train"
+    bounding_box_test: "bounding_box_test"
+    query: "query"
+
+  # File paths
+  positive_index_file: "market1501_positive_index.h5"
+  test_file: "test.h5"
+
+  # Dataset statistics
+  num_train_ids: 751
+  num_train_images: 12936
+  num_query: 3368
+  num_gallery: 15913
+
+  # Image settings
+  image_size: [128, 64]  # [height, width] - Market1501 uses different size
+
+  # Camera settings
+  num_cameras: 6
+
+  # Data loading
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+
+# Model configuration (Market1501 specific)
+model:
+  input_size: [128, 64]
+
+# Training configuration
+training:
+  batch_size: 150
+  max_epochs: 100  # Market1501 typically needs fewer epochs
+
+  # Training rounds
+  training_rounds: 100
+  samples_per_round: 30000
+
+# Data augmentation (Market1501 specific)
+data:
+  augmentation:
+    enabled: true
+    horizontal_flip: 0.5
+    width_shift: 0.05
+    height_shift: 0.05
+    brightness_contrast: 0.2
+
+# Evaluation
+evaluation:
+  # Market1501 uses both single-shot and multi-shot
+  mode: "single_shot"  # Options: single_shot, multi_shot
+
+  # CMC evaluation specific to Market1501
+  cmc_topk: [1, 5, 10, 20]
+
+# Paths
+paths:
+  data_root: "data/market1501"
+  bounding_box_train: "data/market1501/bounding_box_train"
+  bounding_box_test: "data/market1501/bounding_box_test"
+  query: "data/market1501/query"
+  processed_data: "data/market1501/processed"
+  results_dir: "results/market1501"
