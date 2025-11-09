@@ -104,10 +104,10 @@ def main():
 
     # Create datasets
     dataset_name = config["dataset"]["name"]
-    if dataset_name == "cuhk03":
-        train_transform = create_transforms_from_config(config, mode="train")
-        val_transform = create_transforms_from_config(config, mode="val")
+    train_transform = create_transforms_from_config(config, mode="train")
+    val_transform = create_transforms_from_config(config, mode="val")
 
+    if dataset_name == "cuhk03":
         train_dataset = CUHK03Dataset(
             root=config["paths"]["data_root"],
             mode="train",
@@ -122,8 +122,25 @@ def main():
             transform=val_transform,
             return_pairs=True,
         )
+    elif dataset_name == "market1501":
+        train_dataset = Market1501Dataset(
+            root=config["paths"]["data_root"],
+            mode="train",
+            transform=train_transform,
+            return_pairs=True,
+        )
+
+        val_dataset = Market1501Dataset(
+            root=config["paths"]["data_root"],
+            mode="val",
+            transform=val_transform,
+            return_pairs=True,
+        )
     else:
-        raise NotImplementedError(f"Dataset {dataset_name} not implemented")
+        raise NotImplementedError(
+            f"Dataset '{dataset_name}' not implemented. "
+            f"Supported datasets: cuhk03, market1501"
+        )
 
     logger.info(f"Train set: {len(train_dataset)} samples")
     logger.info(f"Val set: {len(val_dataset)} samples")
