@@ -158,6 +158,14 @@ class ReIDLightningModule(pl.LightningModule):
 
             self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
+        else:
+            # 修复: 添加 triplet 和其他 loss 类型的通用分支
+            # 避免 UnboundLocalError
+            outputs = self(x1, x2)
+            loss = self.loss_fn(outputs, labels)
+
+            self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+
         return loss
 
     def test_step(self, batch, batch_idx):
