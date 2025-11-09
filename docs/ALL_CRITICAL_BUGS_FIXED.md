@@ -2,16 +2,16 @@
 # 所有严重 Bug 已修复 - 完整摘要
 
 **Date**: 2025-11-09
-**Total Bugs Fixed**: 15 (All CRITICAL)
+**Total Bugs Fixed**: 16 (All CRITICAL)
 **Status**: ✅ **ALL FIXED, TESTED, AND DOCUMENTED**
 
 ---
 
 ## Executive Summary | 执行摘要
 
-Fifteen critical bugs were discovered through detailed code review that would completely block training, deployment, or produce invalid results. All bugs have been fixed, documented, and tested.
+Sixteen critical bugs were discovered through detailed code review that would completely block training, deployment, or produce invalid results. All bugs have been fixed, documented, and tested.
 
-通过详细的代码审查发现了十五个严重 bug，它们会完全阻塞训练、部署或产生无效结果。所有 bug 已被修复、记录和测试。
+通过详细的代码审查发现了十六个严重 bug，它们会完全阻塞训练、部署或产生无效结果。所有 bug 已被修复、记录和测试。
 
 **Impact**: Without these fixes, the project would be **completely non-functional** for training.
 
@@ -38,6 +38,7 @@ Fifteen critical bugs were discovered through detailed code review that would co
 | 13 | CUHK03 _load_image Stub Returns None | 🔴 Critical | Fallback crashes on edge cases | ✅ Fixed |
 | 14 | Same-Camera Matches in Ranking | 🔴 Critical | CMC/mAP systematically underestimated | ✅ Fixed |
 | 15 | Market1501 CLI Not Supported | 🔴 Critical | Market1501 completely unusable | ✅ Fixed |
+| 16 | FC Layers Ignore Input Size | 🔴 Critical | Non-160×60 inputs crash | ✅ Fixed |
 
 ---
 
@@ -838,6 +839,123 @@ python -m src.scripts.train --config config/market1501.yaml
 
 ---
 
+## 🐛 Bug 16: Fully Connected Layers Ignore Configured Input Size
+
+**File**: `src/models/siamese_cnn.py`
+
+**Problem**: The model accepts an `input_size` parameter and different configs specify different image sizes (e.g., market1501.yaml uses 128×64), but the fully connected layers hard-code dimensions based on 160×60 input.
+
+```python
+# ❌ Before (lines 125 and 141):
+self.fc_input_dim = 50 * 18 * 6  # 5400 (only correct for 160×60!)
+self.embedding_projection = nn.Linear(25 * 37 * 12, 500)  # 11100 (only correct for 160×60!)
+```
+
+**Root Cause**: Hard-coded FC input dimensions instead of dynamic computation based on input_size parameter.
+
+**Impact**:
+- Market1501 (128×64) completely unusable despite having dataset, config, and CLI support
+- Any non-160×60 input size crashes on first forward pass
+- Error message cryptic (doesn't mention input size mismatch)
+- `input_size` parameter exists but is effectively ignored
+
+**Fix**: Implement `_compute_feature_dims()` method that uses dummy forward pass:
+
+```python
+# ✅ After (lines 152-198):
+def _compute_feature_dims(self, input_size: Tuple[int, int]) -> Tuple[int, int]:
+    """
+    通过 dummy forward pass 计算特征维度
+
+    Args:
+        input_size: (height, width) 输入图像尺寸
+
+    Returns:
+        (fc_input_dim, embedding_input_dim): 两个路径的 flatten 后维度
+    """
+    with torch.no_grad():
+        # 创建 dummy 输入
+        h, w = input_size
+        dummy_x1 = torch.zeros(1, 3, h, w)
+        dummy_x2 = torch.zeros(1, 3, h, w)
+
+        # === Single-image path (for embedding) ===
+        feat = self.conv1(dummy_x1)
+        feat = self.conv2(feat)
+        embedding_input_dim = feat.numel()
+
+        # === Pair-wise path (for classification) ===
+        feat1 = self.conv2(self.conv1(dummy_x1))
+        feat2 = self.conv2(self.conv1(dummy_x2))
+        cross1, cross2 = self.cross_input(feat1, feat2)
+        patch1 = self.patch_summary1(cross1)
+        patch2 = self.patch_summary2(cross2)
+        across1 = self.across_patch1(patch1)
+        across2 = self.across_patch2(patch2)
+        combined = torch.cat([across1, across2], dim=1)
+        fc_input_dim = combined.numel()
+
+    return fc_input_dim, embedding_input_dim
+```
+
+**Usage in __init__**:
+```python
+# ✅ Dynamic dimension computation (lines 123-126):
+fc_input_dim, embedding_input_dim = self._compute_feature_dims(input_size)
+self.fc_input_dim = fc_input_dim
+self.embedding_input_dim = embedding_input_dim
+
+self.fc1 = nn.Linear(self.fc_input_dim, 500)
+self.embedding_projection = nn.Linear(self.embedding_input_dim, 500)
+```
+
+**Test Results**:
+```
+1. Testing with 160×60 input (CUHK03):
+   FC input dim: 5400
+   Embedding input dim: 11100
+   Forward pass: ✅ Success! Output shape: torch.Size([2, 2])
+   Embedding extraction: ✅ Success! Embedding shape: torch.Size([2, 500])
+
+2. Testing with 128×64 input (Market1501):
+   FC input dim: 4200
+   Embedding input dim: 9425
+   Forward pass: ✅ Success! Output shape: torch.Size([2, 2])
+   Embedding extraction: ✅ Success! Embedding shape: torch.Size([2, 500])
+
+3. Testing with 100×50 input (custom):
+   FC input dim: 2200
+   Embedding input dim: 4950
+   Forward pass: ✅ Success! Output shape: torch.Size([2, 2])
+   Embedding extraction: ✅ Success! Embedding shape: torch.Size([2, 500])
+```
+
+**Key changes**:
+1. ✅ Added `_compute_feature_dims()` method for dynamic dimension computation
+2. ✅ Used dummy forward pass to determine actual dimensions
+3. ✅ Both pair-wise path (fc_input_dim) and single-image path (embedding_input_dim) computed
+4. ✅ Works for arbitrary input sizes without code changes
+5. ✅ Robust to architecture changes (no manual formula)
+
+**Impact**:
+- Market1501 now usable with 128×64 input ✅
+- CUHK03 unchanged (160×60 produces same dimensions) ✅
+- Arbitrary input sizes supported (100×50, etc.) ✅
+- Model truly size-agnostic ✅
+- No runtime overhead (computation only during __init__) ✅
+
+**Dimensional comparison**:
+| Input Size | FC Input Dim | Embedding Input Dim | Status |
+|------------|--------------|---------------------|--------|
+| 160×60 (CUHK03) | 5400 | 11100 | ✅ Same as before |
+| 128×64 (Market1501) | 4200 | 9425 | ✅ Now works! |
+| 100×50 (Custom) | 2200 | 4950 | ✅ Extensible! |
+
+**Documentation**: `docs/BUG_FIX_FC_LAYERS_IGNORE_INPUT_SIZE.md`
+**Commit**: (to be added)
+
+---
+
 ## Files Modified | 修改文件清单
 
 ```
@@ -845,7 +963,7 @@ src/data/base_dataset.py           | +10 -6   (Bug 1: identity_list mapping)
 src/data/cuhk03_dataset.py         | +65 -64  (Bug 1 + Bug 4 + Bug 13: identity_list + context manager + tuple storage + _load_image implementation)
 src/data/market1501_dataset.py     | +4       (Bug 1: identity_list)
 src/models/lightning_module.py     | +47 -17  (Bugs 2, 3, 7, 11, 12: label inversion + datamodule check + validation else + gamma usage + triplet error handling)
-src/models/siamese_cnn.py          | +24 -31  (Bug 6: FC input dimension; Bug 10: embedding_projection layer + get_embedding() rewrite)
+src/models/siamese_cnn.py          | +71 -34  (Bugs 6, 10, 16: FC input dimension + embedding_projection layer + get_embedding() rewrite + dynamic dimension computation)
 src/evaluation/metrics.py          | +30 -11  (Bug 14: same-camera filtering in compute_cmc and compute_map)
 src/scripts/train.py               | +873 -4  (Bug 5 + Bug 8 + Bug 15: moved from scripts/, config inheritance, removed path hack, Market1501 support)
 src/scripts/__init__.py            | +7       (Bug 8: package marker)
@@ -869,13 +987,14 @@ docs/BUG_FIX_TRIPLET_LOSS_WRONG_SIGNATURE.md      | +700  (Bug 12 documentation)
 docs/BUG_FIX_CUHK03_LOAD_IMAGE_STUB.md            | +706  (Bug 13 documentation)
 docs/BUG_FIX_SAME_CAMERA_RANKING_BIAS.md          | +768  (Bug 14 documentation)
 docs/BUG_FIX_MARKET1501_CLI_NOT_SUPPORTED.md      | +594  (Bug 15 documentation)
+docs/BUG_FIX_FC_LAYERS_IGNORE_INPUT_SIZE.md       | +651  (Bug 16 documentation)
 ```
 
-**Total Code Changes**: 9 files, +1066 lines, -135 lines (includes file moves)
+**Total Code Changes**: 9 files, +1113 lines, -138 lines (includes file moves)
 **Total Test Files**: 1 file, +109 lines
-**Total Documentation**: 13 files, +7821 lines
+**Total Documentation**: 14 files, +8472 lines
 
-**Grand Total**: +8996 lines across 23 files
+**Grand Total**: +9694 lines across 24 files
 
 ---
 

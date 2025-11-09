@@ -118,11 +118,12 @@ class SiameseCNN(nn.Module):
         )
 
         # ===== Higher-Order Relationships (Fully Connected) =====
-        # 计算 flatten 后的特征维度
-        # Actual dimensions: (B, 25, 37, 12) -> Conv2d(k=3,p=0) -> (B, 25, 35, 10)
-        #                    -> MaxPool2d(k=2,s=2,p=1) -> (B, 25, 18, 6)
-        # After concat: (B, 50, 18, 6) -> flatten: (B, 5400)
-        self.fc_input_dim = 50 * 18 * 6  # 5400
+        # 动态计算 flatten 后的特征维度（支持任意输入尺寸）
+        # 使用 dummy forward pass 确定实际维度
+        fc_input_dim, embedding_input_dim = self._compute_feature_dims(input_size)
+
+        self.fc_input_dim = fc_input_dim
+        self.embedding_input_dim = embedding_input_dim
 
         self.fc1 = nn.Linear(self.fc_input_dim, 500)
         self.relu_fc = nn.ReLU(inplace=True)
@@ -136,9 +137,9 @@ class SiameseCNN(nn.Module):
 
         # ===== Embedding Projection for Contrastive Learning =====
         # 用于从单张图像提取 embedding (跳过 pair-wise 操作)
-        # Input: flattened conv2 features (B, 25*37*12 = 11100)
+        # Input: flattened conv2 features
         # Output: (B, 500) embedding
-        self.embedding_projection = nn.Linear(25 * 37 * 12, 500)
+        self.embedding_projection = nn.Linear(self.embedding_input_dim, 500)
 
         # Weight initialization for FC layers
         nn.init.kaiming_normal_(self.fc1.weight, mode='fan_out', nonlinearity='relu')
@@ -147,6 +148,54 @@ class SiameseCNN(nn.Module):
         nn.init.constant_(self.fc2.bias, 0)
         nn.init.kaiming_normal_(self.embedding_projection.weight, mode='fan_out', nonlinearity='relu')
         nn.init.constant_(self.embedding_projection.bias, 0)
+
+    def _compute_feature_dims(self, input_size: Tuple[int, int]) -> Tuple[int, int]:
+        """
+        通过 dummy forward pass 计算特征维度
+
+        这个方法运行一个 dummy 前向传播来确定：
+        1. Pair-wise path (after concat): fc_input_dim
+        2. Single-image path (after conv2): embedding_input_dim
+
+        Args:
+            input_size: (height, width) 输入图像尺寸
+
+        Returns:
+            (fc_input_dim, embedding_input_dim): 两个路径的 flatten 后维度
+        """
+        with torch.no_grad():
+            # 创建 dummy 输入
+            h, w = input_size
+            dummy_x1 = torch.zeros(1, 3, h, w)
+            dummy_x2 = torch.zeros(1, 3, h, w)
+
+            # === Single-image path (for embedding) ===
+            # Conv layers only
+            feat = self.conv1(dummy_x1)
+            feat = self.conv2(feat)
+            embedding_input_dim = feat.numel()  # Total elements for single image
+
+            # === Pair-wise path (for classification) ===
+            # Full forward until concat
+            feat1 = self.conv2(self.conv1(dummy_x1))
+            feat2 = self.conv2(self.conv1(dummy_x2))
+
+            # Cross-input
+            cross1, cross2 = self.cross_input(feat1, feat2)
+
+            # Patch summary
+            patch1 = self.patch_summary1(cross1)
+            patch2 = self.patch_summary2(cross2)
+
+            # Across-patch
+            across1 = self.across_patch1(patch1)
+            across2 = self.across_patch2(patch2)
+
+            # Concat and get total dimension
+            combined = torch.cat([across1, across2], dim=1)
+            fc_input_dim = combined.numel()  # Total elements after concat
+
+        return fc_input_dim, embedding_input_dim
 
     def forward_once(self, x: torch.Tensor) -> torch.Tensor:
         """
