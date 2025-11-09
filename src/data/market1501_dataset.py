@@ -118,6 +118,10 @@ class Market1501Dataset(BaseReIDDataset):
         self.num_identities = len(self.identity_to_images)
         self.num_images = len(self.image_list)
 
+        # 设置 identity_list 用于正确的索引映射
+        # 修复: Market-1501 的 person_id 是 1-1501，不是连续的 0..n-1
+        self.identity_list = list(self.identity_to_images.keys())
+
         print(
             f"Loaded Market-1501 {self.mode} set: "
             f"{self.num_identities} identities, {self.num_images} images"

@@ -6,7 +6,7 @@ Base dataset class for Person Re-Identification
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple, Dict, Any, Literal
+from typing import Optional, Tuple, Dict, Any, Literal, List
 from pathlib import Path
 import numpy as np
 import torch
@@ -25,6 +25,7 @@ class BaseReIDDataset(Dataset, ABC):
         mode: 数据集模式 ('train', 'val', 'test')
         transform: 数据增强变换
         return_pairs: 是否返回图像对 (用于 Siamese 网络)
+        identity_list: 实际的人员ID列表（用于正确索引）
     """
 
     def __init__(
@@ -52,6 +53,7 @@ class BaseReIDDataset(Dataset, ABC):
         self.num_identities = 0
         self.num_images = 0
         self.identity_to_images: Dict[int, list] = {}
+        self.identity_list: List[int] = []  # 实际的人员ID列表
 
         # 加载数据集
         self._load_dataset()
@@ -195,8 +197,9 @@ class BaseReIDDataset(Dataset, ABC):
             # 随机决定生成正样本对还是负样本对
             is_positive = np.random.rand() > 0.5
 
-            # 获取参考人员ID
-            person_id = index % self.num_identities
+            # 获取参考人员ID - 使用 identity_list 进行正确的索引映射
+            # 修复: 不能直接使用 index % num_identities，因为 person_id 可能不是连续的
+            person_id = self.identity_list[index % len(self.identity_list)]
 
             try:
                 if is_positive:
@@ -212,11 +215,12 @@ class BaseReIDDataset(Dataset, ABC):
 
                 return (tensor1, tensor2), label
 
-            except (ValueError, IndexError) as e:
+            except (ValueError, IndexError, KeyError) as e:
                 # 如果出错，返回一个负样本对
                 print(f"Warning: Error generating pair for index {index}: {e}")
-                person_id1 = index % self.num_identities
-                person_id2 = (index + 1) % self.num_identities
+                # 使用 identity_list 进行正确的索引映射
+                person_id1 = self.identity_list[index % len(self.identity_list)]
+                person_id2 = self.identity_list[(index + 1) % len(self.identity_list)]
                 images1 = self.identity_to_images[person_id1]
                 images2 = self.identity_to_images[person_id2]
                 image1 = self._load_image(images1[0])

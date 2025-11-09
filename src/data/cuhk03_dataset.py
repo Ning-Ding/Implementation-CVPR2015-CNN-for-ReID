@@ -120,6 +120,10 @@ class CUHK03Dataset(BaseReIDDataset):
 
         self.num_identities = len(self.identity_indices)
 
+        # 设置 identity_list 用于正确的索引映射
+        # 修复: identity_indices 包含实际的 person ID，不是连续的 0..n-1
+        self.identity_list = self.identity_indices
+
         print(f"Loaded CUHK03 {self.mode} set: {self.num_identities} identities, {self.num_images} images")
 
     def _create_processed_dataset(self):
