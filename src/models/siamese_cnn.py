@@ -109,7 +109,7 @@ class SiameseCNN(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2, padding=1),
         )
-        # Output: (B, 25, 18, 5) -> after padding: (B, 25, 17, 5)
+        # Output: (B, 25, 18, 6)
 
         self.across_patch2 = nn.Sequential(
             nn.Conv2d(25, 25, kernel_size=3, padding=0),
@@ -119,8 +119,10 @@ class SiameseCNN(nn.Module):
 
         # ===== Higher-Order Relationships (Fully Connected) =====
         # 计算 flatten 后的特征维度
-        # After concat: (B, 50, 17, 5) -> flatten: (B, 4250)
-        self.fc_input_dim = 50 * 17 * 5  # 4250
+        # Actual dimensions: (B, 25, 37, 12) -> Conv2d(k=3,p=0) -> (B, 25, 35, 10)
+        #                    -> MaxPool2d(k=2,s=2,p=1) -> (B, 25, 18, 6)
+        # After concat: (B, 50, 18, 6) -> flatten: (B, 5400)
+        self.fc_input_dim = 50 * 18 * 6  # 5400
 
         self.fc1 = nn.Linear(self.fc_input_dim, 500)
         self.relu_fc = nn.ReLU(inplace=True)
@@ -176,14 +178,14 @@ class SiameseCNN(nn.Module):
         patch2 = self.patch_summary2(cross2)
 
         # Across-Patch Features
-        across1 = self.across_patch1(patch1)  # (B, 25, 17, 5)
+        across1 = self.across_patch1(patch1)  # (B, 25, 18, 6)
         across2 = self.across_patch2(patch2)
 
         # Concatenate
-        combined = torch.cat([across1, across2], dim=1)  # (B, 50, 17, 5)
+        combined = torch.cat([across1, across2], dim=1)  # (B, 50, 18, 6)
 
         # Flatten
-        combined = combined.view(combined.size(0), -1)  # (B, 4250)
+        combined = combined.view(combined.size(0), -1)  # (B, 5400)
 
         # Fully Connected
         x = self.fc1(combined)  # (B, 500)
