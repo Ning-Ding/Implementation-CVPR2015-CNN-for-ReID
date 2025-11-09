@@ -72,8 +72,8 @@ all = [
 
 [project.scripts]
 reid-train = "src.scripts.train:main"
-reid-eval = "src.scripts.evaluate:main"
-reid-prepare-data = "src.scripts.prepare_data:main"
+# reid-eval and reid-prepare-data removed - modules do not exist yet
+# TODO: Add when evaluate.py and prepare_data.py are implemented
 
 [project.urls]
 Homepage = "https://github.com/Ning-Ding/Implementation-CVPR2015-CNN-for-ReID"
