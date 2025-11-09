@@ -68,17 +68,26 @@ def compute_cmc(
         topk = num_g
 
     indices = np.argsort(distmat, axis=1)  # (N_q, N_g) 排序索引
-    matches = (gallery_ids[indices] == query_ids[:, np.newaxis])  # (N_q, N_g)
-
-    # 移除同一摄像头下的同一人（如果提供了摄像头信息）
-    if query_cams is not None and gallery_cams is not None:
-        same_cam = (gallery_cams[indices] == query_cams[:, np.newaxis])
-        matches = matches & ~same_cam
 
     cmc = np.zeros(topk)
     for q_idx in range(num_q):
+        q_id = query_ids[q_idx]
+        q_cam = query_cams[q_idx] if query_cams is not None else None
+
+        # 获取排序后的 gallery
+        order = indices[q_idx]
+        g_ids = gallery_ids[order]
+        g_cams = gallery_cams[order] if gallery_cams is not None else None
+
+        # 移除同一摄像头的匹配（标准 ReID 评估协议）
+        if q_cam is not None and g_cams is not None:
+            # 过滤掉同一摄像头的样本
+            keep = (g_cams != q_cam)
+            g_ids = g_ids[keep]
+
         # 找到第一个匹配的位置
-        match_indices = np.where(matches[q_idx])[0]
+        matches = (g_ids == q_id)
+        match_indices = np.where(matches)[0]
         if len(match_indices) > 0:
             first_match = match_indices[0]
             if first_match < topk:
@@ -121,11 +130,14 @@ def compute_map(
         g_ids = gallery_ids[order]
         g_cams = gallery_cams[order] if gallery_cams is not None else None
 
-        # Ground truth: 同一人但不同摄像头
+        # 移除同一摄像头的样本（标准 ReID 评估协议）
         if q_cam is not None and g_cams is not None:
-            valid = (g_ids == q_id) & (g_cams != q_cam)
-        else:
-            valid = (g_ids == q_id)
+            # 过滤掉同一摄像头的样本
+            keep = (g_cams != q_cam)
+            g_ids = g_ids[keep]
+
+        # Ground truth: 同一人的图像
+        valid = (g_ids == q_id)
 
         if not np.any(valid):
             continue
