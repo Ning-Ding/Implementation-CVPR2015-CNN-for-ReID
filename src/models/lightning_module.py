@@ -130,10 +130,24 @@ class ReIDLightningModule(pl.LightningModule):
 
             self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
 
+        elif self.loss_type == "triplet":
+            # Triplet loss requires (anchor, positive, negative) embeddings
+            # Current dataset provides pairs (x1, x2) with labels, not triplets
+            # Proper implementation requires:
+            # 1. Triplet dataset that provides (anchor, positive, negative) samples
+            # 2. Triplet mining strategy (hard negative mining, etc.)
+            # 3. Modified data loading and batching logic
+            raise NotImplementedError(
+                "Triplet loss is not yet implemented. "
+                "Current dataset provides pairs (x1, x2) with labels, "
+                "but TripletMarginLoss requires (anchor, positive, negative) embeddings. "
+                "To use triplet loss, implement: "
+                "(1) Triplet dataset, (2) Triplet mining, (3) Call loss_fn(anchor_emb, pos_emb, neg_emb)"
+            )
+
         else:
-            outputs = self(x1, x2)
-            loss = self.loss_fn(outputs, labels)
-            self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+            raise ValueError(f"Unsupported loss type: {self.loss_type}. "
+                           f"Supported types: cross_entropy, contrastive")
 
         return loss
 
@@ -158,13 +172,20 @@ class ReIDLightningModule(pl.LightningModule):
 
             self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
-        else:
-            # 修复: 添加 triplet 和其他 loss 类型的通用分支
-            # 避免 UnboundLocalError
-            outputs = self(x1, x2)
-            loss = self.loss_fn(outputs, labels)
+        elif self.loss_type == "triplet":
+            # Triplet loss requires (anchor, positive, negative) embeddings
+            # Current dataset provides pairs (x1, x2) with labels, not triplets
+            raise NotImplementedError(
+                "Triplet loss is not yet implemented. "
+                "Current dataset provides pairs (x1, x2) with labels, "
+                "but TripletMarginLoss requires (anchor, positive, negative) embeddings. "
+                "To use triplet loss, implement: "
+                "(1) Triplet dataset, (2) Triplet mining, (3) Call loss_fn(anchor_emb, pos_emb, neg_emb)"
+            )
 
-            self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        else:
+            raise ValueError(f"Unsupported loss type: {self.loss_type}. "
+                           f"Supported types: cross_entropy, contrastive")
 
         return loss
 
