@@ -262,9 +262,10 @@ elif dataset_name == "market1501":
         return_pairs=True,
     )
 
+    # Market1501 uses "query" for validation instead of "val"
     val_dataset = Market1501Dataset(
         root=config["paths"]["data_root"],
-        mode="val",
+        mode="query",  # ✅ Use "query" (Market1501 doesn't support "val")
         transform=val_transform,
         return_pairs=True,
     )
@@ -278,9 +279,27 @@ else:
 **Key improvements**:
 1. ✅ Transform creation hoisted (DRY principle)
 2. ✅ Added `elif dataset_name == "market1501":` branch
-3. ✅ Market1501Dataset properly instantiated
+3. ✅ Market1501Dataset properly instantiated with `mode="query"` for validation
 4. ✅ Error message now lists supported datasets
 5. ✅ Consistent parameter structure across datasets
+
+### Mode Name Differences
+
+**CUHK03** uses standard train/val/test split:
+```python
+CUHK03Dataset(mode="val")  # ✅ Supported
+```
+
+**Market1501** uses ReID-specific query/gallery split:
+```python
+Market1501Dataset(mode="val")    # ❌ ValueError!
+Market1501Dataset(mode="query")  # ✅ Correct for validation
+```
+
+**Why the difference**:
+- CUHK03: Pre-split into train/val/test with HDF5 indices
+- Market1501: Uses standard ReID evaluation protocol (query vs gallery)
+- For validation: query set is the natural choice (3,368 images)
 
 ### Parameter Differences
 
@@ -288,7 +307,8 @@ else:
 ```python
 CUHK03Dataset(
     ...,
-    create_if_not_exists=True,  # ← CUHK03 can process .mat files
+    mode="val",  # Standard validation split
+    create_if_not_exists=True,  # Can process .mat files
 )
 ```
 
@@ -296,6 +316,7 @@ CUHK03Dataset(
 ```python
 Market1501Dataset(
     ...,
+    mode="query",  # Use query set for validation
     # No create_if_not_exists (assumes pre-processed images)
 )
 ```

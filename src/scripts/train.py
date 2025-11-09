@@ -130,9 +130,10 @@ def main():
             return_pairs=True,
         )
 
+        # Market1501 uses "query" for validation instead of "val"
         val_dataset = Market1501Dataset(
             root=config["paths"]["data_root"],
-            mode="val",
+            mode="query",
             transform=val_transform,
             return_pairs=True,
         )
